@@ -1,0 +1,66 @@
+package repositories
+
+import (
+	"os"
+	"testing"
+
+	"notes-app/src/commons/database"
+	"notes-app/src/modul/user/Domains/entities"
+
+	"github.com/stretchr/testify/assert"
+)
+
+var repo *UserRepository
+
+func TestMain(m *testing.M) {
+	database.ConnectPostgresql(".env")
+
+	repo = &UserRepository{
+		DB: database.DB,
+	}
+
+	code := m.Run()
+
+	os.Exit(code)
+}
+
+func TestVerifyUsername_NotExists(t *testing.T) {
+	user := entities.User{
+		Username: "username_yang_tidak_ada",
+	}
+
+	err := repo.VerifyUsername(&user)
+
+	assert.NoError(t, err)
+}
+
+func TestVerifyUsername_AlreadyExists(t *testing.T) {
+
+	user := entities.User{
+		Username: "john",
+		Email:    "john@test.com",
+		Password: "password",
+	}
+
+	err := repo.Createuser(&user)
+	assert.NoError(t, err)
+
+	err = repo.VerifyUsername(&user)
+
+	assert.EqualError(t, err, "username sudah digunakan")
+}
+
+func TestAddUser_Success(t *testing.T) {
+
+	user := entities.User{
+		Username: "joko",
+		Email:    "joko@test.com",
+		Password: "12345678",
+	}
+
+	err := repo.Createuser(&user)
+
+	assert.NoError(t, err)
+
+	assert.NotEmpty(t, user.ID)
+}
