@@ -42,7 +42,7 @@ jobs:
           DB_HOST=localhost
           DB_PORT=5432
           DB_USER=developers
-          DB_PASSWORD=supersecretpassword
+          DB_PASSWORD=password
           DB_NAME=notesapp_test
           DB_SSLMODE=disable
           DB_TIMEZONE=Asia/Jakarta
