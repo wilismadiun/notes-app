@@ -13,7 +13,7 @@ import (
 var repo *UserRepository
 
 func TestMain(m *testing.M) {
-	database.ConnectPostgresql(".env")
+	database.ConnectPostgresql(".test.env")
 
 	repo = &UserRepository{
 		DB: database.DB,
@@ -38,7 +38,6 @@ func TestVerifyUsername_AlreadyExists(t *testing.T) {
 
 	user := entities.User{
 		Username: "john",
-		Email:    "john@test.com",
 		Password: "password",
 	}
 
@@ -54,7 +53,6 @@ func TestAddUser_Success(t *testing.T) {
 
 	user := entities.User{
 		Username: "joko",
-		Email:    "joko@test.com",
 		Password: "12345678",
 	}
 

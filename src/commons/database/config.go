@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"runtime"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -13,9 +15,20 @@ import (
 var DB *gorm.DB
 
 func ConnectPostgresql(env string) {
-	// filePath := fmt.Sprintf("../../../%s", env)
+	_, currentFile, _, _ := runtime.Caller(0)
 
-	err := godotenv.Load("E:/notes-app/.env")
+	projectRoot := filepath.Join(
+		filepath.Dir(currentFile),
+		"..",
+		"..",
+		"..",
+	)
+
+	envPath := filepath.Join(projectRoot, env)
+
+	log.Println("Mencari env:", envPath)
+
+	err := godotenv.Load(envPath)
 	// err := godotenv.Load(filePath)
 	if err != nil {
 		log.Fatal(".env tidak terbaca")

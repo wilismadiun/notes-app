@@ -18,15 +18,10 @@ var (
 type User struct {
 	ID       string
 	Username string `json:"username"`
-	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
 func VerifyRegisterUser(user User) error {
-	if strings.TrimSpace(user.Email) == "" {
-		return ErrEmailRequired
-	}
-
 	if strings.TrimSpace(user.Username) == "" {
 		return ErrUsernameRequired
 	}
@@ -43,12 +38,6 @@ func VerifyRegisterUser(user User) error {
 	// Password minimal 8 karakter
 	if len(user.Password) < 8 {
 		return ErrPasswordTooShort
-	}
-
-	// Validasi format email sederhana
-	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
-	if !emailRegex.MatchString(user.Email) {
-		return ErrEmailInvalid
 	}
 
 	return nil

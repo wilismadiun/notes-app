@@ -13,19 +13,9 @@ func TestVerifyRegisterUser(t *testing.T) {
 		wantErr error
 	}{
 		{
-			name: "email required",
-			user: User{
-				Username: "johndoe",
-				Email:    "",
-				Password: "password123",
-			},
-			wantErr: ErrEmailRequired,
-		},
-		{
 			name: "username required",
 			user: User{
 				Username: "",
-				Email:    "john@gmail.com",
 				Password: "password123",
 			},
 			wantErr: ErrUsernameRequired,
@@ -34,7 +24,6 @@ func TestVerifyRegisterUser(t *testing.T) {
 			name: "password required",
 			user: User{
 				Username: "johndoe",
-				Email:    "john@gmail.com",
 				Password: "",
 			},
 			wantErr: ErrPasswordRequired,
@@ -43,7 +32,6 @@ func TestVerifyRegisterUser(t *testing.T) {
 			name: "username invalid",
 			user: User{
 				Username: "john@doe",
-				Email:    "john@gmail.com",
 				Password: "password123",
 			},
 			wantErr: ErrUsernameInvalid,
@@ -52,25 +40,14 @@ func TestVerifyRegisterUser(t *testing.T) {
 			name: "password too short",
 			user: User{
 				Username: "johndoe",
-				Email:    "john@gmail.com",
 				Password: "1234567",
 			},
 			wantErr: ErrPasswordTooShort,
 		},
 		{
-			name: "email invalid",
-			user: User{
-				Username: "johndoe",
-				Email:    "john.gmail.com",
-				Password: "password123",
-			},
-			wantErr: ErrEmailInvalid,
-		},
-		{
 			name: "success",
 			user: User{
 				Username: "johndoe",
-				Email:    "john@gmail.com",
 				Password: "password123",
 			},
 			wantErr: nil,

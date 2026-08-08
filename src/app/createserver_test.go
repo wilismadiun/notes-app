@@ -16,7 +16,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	database.ConnectPostgresql(".env")
+	database.ConnectPostgresql(".test.env")
 
 	gin.SetMode(gin.TestMode)
 
@@ -60,7 +60,6 @@ func TestUserModule(t *testing.T) {
 		user := entities.User{
 			ID:       uuid.New().String(),
 			Username: "jaya",
-			Email:    "jaya@gmail.com",
 			Password: "12345678",
 		}
 

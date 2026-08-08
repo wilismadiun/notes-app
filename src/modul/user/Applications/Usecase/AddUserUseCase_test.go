@@ -26,7 +26,6 @@ func TestAddUser_Success(t *testing.T) {
 	user := entities.User{
 		Username: "John1234",
 		Password: "12345678",
-		Email:    "john123@gmail.com",
 	}
 
 	mockRepo.EXPECT().VerifyUsername(gomock.Any()).Return(nil)
@@ -43,7 +42,6 @@ func TestAddUser_Success(t *testing.T) {
 
 			assert.Equal(t, "hashed-password", user.Password)
 			assert.Equal(t, "John1234", user.Username)
-			assert.Equal(t, "john123@gmail.com", user.Email)
 
 			return nil
 		})
@@ -68,7 +66,6 @@ func TestAddUser_VerifyUsernameFailed(t *testing.T) {
 	user := entities.User{
 		Username: "John1234",
 		Password: "12345678",
-		Email:    "john123@gmail.com",
 	}
 
 	mockRepo.
@@ -97,7 +94,6 @@ func TestAddUser_HashPasswordFailed(t *testing.T) {
 	user := entities.User{
 		Username: "John1234",
 		Password: "12345678",
-		Email:    "john123@gmail.com",
 	}
 
 	mockRepo.EXPECT().VerifyUsername(gomock.Any()).Return(nil)
@@ -128,7 +124,6 @@ func TestAddUser_CreateUserFailed(t *testing.T) {
 	user := entities.User{
 		Username: "John1234",
 		Password: "12345678",
-		Email:    "john123@gmail.com",
 	}
 
 	mockRepo.EXPECT().VerifyUsername(gomock.Any()).Return(nil)
