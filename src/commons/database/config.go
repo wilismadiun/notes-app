@@ -26,12 +26,15 @@ func ConnectPostgresql(env string) {
 
 	envPath := filepath.Join(projectRoot, env)
 
-	log.Println("Mencari env:", envPath)
+	_, err := os.Stat(envPath)
+	if err == nil {
+		log.Println("Memuat env:", envPath)
 
-	err := godotenv.Load(envPath)
-	// err := godotenv.Load(filePath)
-	if err != nil {
-		log.Fatal(".env tidak terbaca")
+		if err := godotenv.Load(envPath); err != nil {
+			log.Println("Gagal memuat .env:", err)
+		}
+	} else {
+		log.Println("File env tidak ditemukan, menggunakan environment variable")
 	}
 
 	host := os.Getenv("DB_HOST")
