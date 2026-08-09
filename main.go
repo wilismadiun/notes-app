@@ -14,5 +14,5 @@ func main() {
 
 	app.RegisterRouter(router, database.DB)
 
-	router.Run()
+	router.Run(":3000")
 }
