@@ -38,11 +38,11 @@ func TestMain(m *testing.M) {
 	err = repo.DB.Where("id = ?", "user-123").First(&exisistUser).Error
 	if err != nil {
 		log.Println("=========================================================")
-		log.Println("Data tidak ditemukan")
+		log.Println("Data users main tidak ditemukan")
 		log.Println("=========================================================")
 	} else {
 		log.Println("=========================================================")
-		log.Println("Data ditemukan")
+		log.Println("Data users main ditemukan")
 		log.Println(exisistUser.ID)
 		log.Println("=========================================================")
 	}
@@ -54,6 +54,19 @@ func TestMain(m *testing.M) {
 }
 
 func Test_CreateNote(t *testing.T) {
+	var exisistUser entitiesUser.User
+	err := repo.DB.Where("id = ?", "user-123").First(&exisistUser).Error
+	if err != nil {
+		log.Println("=========================================================")
+		log.Println("Data users tidak ditemukan")
+		log.Println("=========================================================")
+	} else {
+		log.Println("=========================================================")
+		log.Println("Data users ditemukan")
+		log.Println(exisistUser.ID)
+		log.Println("=========================================================")
+	}
+
 	now := time.Now()
 	id := uuid.New().String()
 
@@ -66,7 +79,7 @@ func Test_CreateNote(t *testing.T) {
 		Owner:    "user-123",
 	}
 
-	err := repo.CreateNote(note)
+	err = repo.CreateNote(note)
 
 	assert.NoError(t, err)
 
@@ -92,11 +105,11 @@ func Test_DeleteNote(t *testing.T) {
 		err := repo.DB.Where("owner = ?", "user-123").First(&existNote).Error
 		if err != nil {
 			log.Println("=============================================")
-			log.Println("Data tidak ditemukan")
+			log.Println("Data note tidak ditemukan")
 			log.Println("=============================================")
 		} else {
 			log.Println("=============================================")
-			log.Println("Data ditemukan")
+			log.Println("Data note ditemukan")
 			log.Println(existNote.ID)
 			log.Println("=============================================")
 		}
