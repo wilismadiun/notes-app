@@ -11,7 +11,7 @@ func TestGenerateId(t *testing.T) {
 	generateHandler := GeneratorIdUuid{}
 
 	t.Run("should generate uuid with note prefix", func(t *testing.T) {
-		id := generateHandler.GenerateId()
+		id := generateHandler.Generator()
 
 		assert.True(t, strings.HasPrefix(id, "note-"))
 	})

@@ -8,7 +8,7 @@ import (
 
 type GeneratorIdUuid struct{}
 
-func (h *GeneratorIdUuid) GenerateId() string {
+func (h *GeneratorIdUuid) Generator() string {
 	id := fmt.Sprintf("note-%s", uuid.New().String())
 
 	return id

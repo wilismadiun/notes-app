@@ -12,7 +12,7 @@ func main() {
 
 	database.ConnectPostgresql(".env")
 
-	app.RegisterRouter(router, database.DB)
+	app.Router(router, database.DB)
 
 	router.Run(":3000")
 }

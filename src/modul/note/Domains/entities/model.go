@@ -8,7 +8,7 @@ type Note struct {
 	Content  string `json:"content"`
 	CreateAt time.Time
 	UpdateAt time.Time
-	Owner    string
+	Owner    string `json:"owner"`
 }
 
 type CreateNoteResponse struct {

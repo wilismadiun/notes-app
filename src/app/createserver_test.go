@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"notes-app/src/commons/database"
+	entitiesNote "notes-app/src/modul/note/Domains/entities"
 	"notes-app/src/modul/user/Domains/entities"
 	"os"
 	"testing"
@@ -29,7 +30,7 @@ func TestUserModule(t *testing.T) {
 
 	router := gin.New()
 
-	RegisterRouter(router, database.DB)
+	Router(router, database.DB)
 
 	t.Run("should response 400 when password less than 8 character", func(t *testing.T) {
 		body := []byte(`{
@@ -136,4 +137,88 @@ func TestUserModule(t *testing.T) {
 
 		database.DB.Exec("DELETE FROM users")
 	})
+}
+
+func TestNoteModul(t *testing.T) {
+	router := gin.New()
+
+	Router(router, database.DB)
+
+	user := entities.User{
+		ID:       "user-123",
+		Username: "Jaya123",
+		Password: "pass123",
+	}
+
+	err := database.DB.Create(&user).Error
+	assert.NoError(t, err)
+
+	t.Run("should response 400 when owner empty", func(t *testing.T) {
+		body := []byte(`{
+			"title": "Note1",
+			"content": "content note1"
+		}`)
+
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/note",
+			bytes.NewBuffer(body),
+		)
+
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, `{
+			"message": "gagal menambahkan note",
+			"error": "note owner is required"
+		}`, w.Body.String())
+	})
+
+	t.Run("Add note success", func(t *testing.T) {
+		body := []byte(`{
+			"title": "Note1",
+			"content": "content note1",
+			"owner": "user-123"
+		}`)
+
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/note",
+			bytes.NewBuffer(body),
+		)
+
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusCreated, w.Code)
+
+		var note entitiesNote.Note
+
+		err := database.DB.
+			Where("title = ? AND owner = ?", "Note1", "user-123").
+			First(&note).
+			Error
+
+		assert.NoError(t, err)
+		expectedResponse := fmt.Sprintf(`{
+			"message": "note berhasil ditambahkan",
+			"data": {
+				"ID": "%s",
+				"Title": "%s"
+			}
+		}`, note.ID, note.Title)
+
+		assert.JSONEq(t, expectedResponse, w.Body.String())
+
+		// Cleanup
+		database.DB.Exec("DELETE FROM notes")
+	})
+	database.DB.Exec("DELETE FROM users")
 }

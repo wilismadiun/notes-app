@@ -23,9 +23,7 @@ func (h *UserHandler) AddUser(c *gin.Context) {
 		return
 	}
 
-	var userSuccess entities.RegisteredUser
-
-	userSuccess, err = h.CreateHandler.Execute(&user)
+	userSuccess, err := h.CreateHandler.Execute(&user)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),

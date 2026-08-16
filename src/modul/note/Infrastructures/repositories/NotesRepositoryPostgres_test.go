@@ -18,7 +18,7 @@ func TestMain(m *testing.M) {
 	database.ConnectPostgresql(".test.env")
 
 	repo = &NoteRepository{
-		db: database.DB,
+		DB: database.DB,
 	}
 
 	user := entitiesUser.User{
@@ -27,14 +27,14 @@ func TestMain(m *testing.M) {
 		Password: "pass-123",
 	}
 
-	err := repo.db.Create(&user).Error
+	err := repo.DB.Create(&user).Error
 	if err != nil {
 		panic(err)
 	}
 
 	code := m.Run()
 
-	repo.db.Exec("DELETE FROM users")
+	repo.DB.Exec("DELETE FROM users")
 	os.Exit(code)
 }
 
@@ -56,7 +56,7 @@ func Test_CreateNote(t *testing.T) {
 	assert.NoError(t, err)
 
 	var expectedNote entities.Note
-	err = repo.db.Where("id = ?", id).First(&expectedNote).Error
+	err = repo.DB.Where("id = ?", id).First(&expectedNote).Error
 
 	assert.NoError(t, err)
 	assert.Equal(t, note.ID, expectedNote.ID)
