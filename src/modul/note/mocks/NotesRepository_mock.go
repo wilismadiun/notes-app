@@ -41,61 +41,15 @@ func (m *MockNotesRepository) EXPECT() *MockNotesRepositoryMockRecorder {
 }
 
 // CreateNote mocks base method.
-func (m *MockNotesRepository) CreateNote(note entities.Note) (entities.CreateNoteResponse, error) {
+func (m *MockNotesRepository) CreateNote(note entities.Note) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateNote", note)
-	ret0, _ := ret[0].(entities.CreateNoteResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // CreateNote indicates an expected call of CreateNote.
 func (mr *MockNotesRepositoryMockRecorder) CreateNote(note any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNote", reflect.TypeOf((*MockNotesRepository)(nil).CreateNote), note)
-}
-
-// DeleteNoteById mocks base method.
-func (m *MockNotesRepository) DeleteNoteById(id string) (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteNoteById", id)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// DeleteNoteById indicates an expected call of DeleteNoteById.
-func (mr *MockNotesRepositoryMockRecorder) DeleteNoteById(id any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNoteById", reflect.TypeOf((*MockNotesRepository)(nil).DeleteNoteById), id)
-}
-
-// FindNoteById mocks base method.
-func (m *MockNotesRepository) FindNoteById(id string) (entities.Note, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindNoteById", id)
-	ret0, _ := ret[0].(entities.Note)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindNoteById indicates an expected call of FindNoteById.
-func (mr *MockNotesRepositoryMockRecorder) FindNoteById(id any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindNoteById", reflect.TypeOf((*MockNotesRepository)(nil).FindNoteById), id)
-}
-
-// UpdateNoteById mocks base method.
-func (m *MockNotesRepository) UpdateNoteById(note entities.Note) (entities.CreateNoteResponse, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateNoteById", note)
-	ret0, _ := ret[0].(entities.CreateNoteResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UpdateNoteById indicates an expected call of UpdateNoteById.
-func (mr *MockNotesRepositoryMockRecorder) UpdateNoteById(note any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNoteById", reflect.TypeOf((*MockNotesRepository)(nil).UpdateNoteById), note)
 }

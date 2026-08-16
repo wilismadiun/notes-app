@@ -24,10 +24,13 @@ func (h *CreateNote) Execute(note entities.Note) (entities.CreateNoteResponse, e
 		return entities.CreateNoteResponse{}, err
 	}
 
-	noteResponse, err := h.Repo.CreateNote(note)
+	err = h.Repo.CreateNote(note)
 	if err != nil {
 		return entities.CreateNoteResponse{}, err
 	}
 
-	return noteResponse, err
+	return entities.CreateNoteResponse{
+		ID:    note.ID,
+		Title: note.Title,
+	}, err
 }

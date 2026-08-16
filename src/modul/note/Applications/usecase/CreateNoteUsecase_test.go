@@ -48,7 +48,7 @@ func Test_CreateNoteUseCase(t *testing.T) {
 			Owner:   "user-123",
 		}
 
-		mockRepository.EXPECT().CreateNote(gomock.Any()).Return(entities.CreateNoteResponse{}, errors.New("Gagal menambahkan note"))
+		mockRepository.EXPECT().CreateNote(gomock.Any()).Return(errors.New("Gagal menambahkan note"))
 
 		noteResponse, err := cn.Execute(note)
 
@@ -71,7 +71,7 @@ func Test_CreateNoteUseCase(t *testing.T) {
 			Title: "test use case",
 		}
 
-		mockRepository.EXPECT().CreateNote(gomock.Any()).Return(expectedResponse, nil)
+		mockRepository.EXPECT().CreateNote(gomock.Any()).Return(nil)
 
 		noteResponse, err := cn.Execute(note)
 
