@@ -86,14 +86,13 @@ func Test_DeleteNote(t *testing.T) {
 			Owner:    "user-123",
 		}
 
-		err := repo.CreateNote(note)
+		err := repo.DB.Create(&note).Error
 		assert.NoError(t, err)
 
 		err = repo.DeleteNoteById("id-123")
 
 		assert.NoError(t, err)
 
-		// Assert: pastikan data benar-benar sudah tidak ada
 		var deletedNote entities.Note
 		err = repo.DB.
 			Where("id = ?", "id-123").

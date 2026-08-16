@@ -288,6 +288,6 @@ func Test_DeleteNoteModul(t *testing.T) {
 		}`, w.Body.String())
 
 		database.DB.Exec("DELETE FROM notes")
-		database.DB.Exec("DELETE FROM users")
 	})
+	database.DB.Exec("DELETE FROM users")
 }
