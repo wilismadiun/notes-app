@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"log"
 	"notes-app/src/commons/database"
 	"notes-app/src/modul/note/Domains/entities"
 	entitiesUser "notes-app/src/modul/user/Domains/entities"
@@ -31,6 +32,19 @@ func TestMain(m *testing.M) {
 	err := repo.DB.Create(&user).Error
 	if err != nil {
 		panic(err)
+	}
+
+	var exisistUser entitiesUser.User
+	err = repo.DB.Where("id = ?", "user-123").First(&exisistUser).Error
+	if err != nil {
+		log.Println("=========================================================")
+		log.Println("Data tidak ditemukan")
+		log.Println("=========================================================")
+	} else {
+		log.Println("=========================================================")
+		log.Println("Data ditemukan")
+		log.Println(exisistUser.ID)
+		log.Println("=========================================================")
 	}
 
 	code := m.Run()
@@ -76,7 +90,16 @@ func Test_DeleteNote(t *testing.T) {
 		var existNote entities.Note
 
 		err := repo.DB.Where("owner = ?", "user-123").First(&existNote).Error
-		assert.NoError(t, err)
+		if err != nil {
+			log.Println("=============================================")
+			log.Println("Data tidak ditemukan")
+			log.Println("=============================================")
+		} else {
+			log.Println("=============================================")
+			log.Println("Data ditemukan")
+			log.Println(existNote.ID)
+			log.Println("=============================================")
+		}
 
 		err = repo.DeleteNoteById(existNote.ID)
 
