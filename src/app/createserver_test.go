@@ -10,6 +10,7 @@ import (
 	"notes-app/src/modul/user/Domains/entities"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -221,4 +222,72 @@ func TestNoteModul(t *testing.T) {
 		database.DB.Exec("DELETE FROM notes")
 	})
 	database.DB.Exec("DELETE FROM users")
+}
+
+func Test_DeleteNoteModul(t *testing.T) {
+	router := gin.New()
+
+	Router(router, database.DB)
+
+	user := entities.User{
+		ID:       "user-123",
+		Username: "Jaya123",
+		Password: "pass123",
+	}
+
+	err := database.DB.Create(&user).Error
+	assert.NoError(t, err)
+
+	t.Run("should response 400 when id not found", func(t *testing.T) {
+		req := httptest.NewRequest(
+			http.MethodDelete,
+			"/note/:id",
+			nil,
+		)
+
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, `{
+			"message": "gagal menghapus note",
+			"error": "id tidak ditemukan"
+		}`, w.Body.String())
+	})
+
+	t.Run("delete success", func(t *testing.T) {
+		now := time.Now()
+
+		note := entitiesNote.Note{
+			ID:       "id-123",
+			Title:    "delete note",
+			Content:  "delete content note",
+			CreateAt: now,
+			UpdateAt: now,
+			Owner:    "user-123",
+		}
+
+		err := database.DB.Create(&note).Error
+		assert.NoError(t, err)
+
+		req := httptest.NewRequest(
+			http.MethodDelete,
+			"/note/id-123",
+			nil,
+		)
+
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, `{
+			"message": "berhasil menghapus note",
+			"data": "id-123"
+		}`, w.Body.String())
+
+		database.DB.Exec("DELETE FROM notes")
+		database.DB.Exec("DELETE FROM users")
+	})
 }
