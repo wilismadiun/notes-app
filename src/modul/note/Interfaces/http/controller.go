@@ -10,6 +10,7 @@ import (
 
 type NoteHandler struct {
 	CreateHandler *usecase.CreateNote
+	Deletehandler *usecase.DeleteNote
 }
 
 func (h *NoteHandler) AddNote(c *gin.Context) {
@@ -38,4 +39,22 @@ func (h *NoteHandler) AddNote(c *gin.Context) {
 		"data":    noteSuccess,
 	})
 
+}
+
+func (h *NoteHandler) DeleteNote(c *gin.Context) {
+	id := c.Param("id")
+
+	existId, err := h.Deletehandler.Execute(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "gagal menghapus note",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "berhasil menghapus note",
+		"data":    existId,
+	})
 }

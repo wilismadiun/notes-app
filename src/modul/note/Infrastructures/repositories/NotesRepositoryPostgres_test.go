@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
 var repo *NoteRepository
@@ -64,4 +65,41 @@ func Test_CreateNote(t *testing.T) {
 	assert.Equal(t, note.Owner, expectedNote.Owner)
 
 	// repo.db.Exec("DELETE FROM notes")
+}
+
+func Test_DeleteNote(t *testing.T) {
+	t.Run("id not found", func(t *testing.T) {
+		err := repo.DeleteNoteById("id-123")
+
+		assert.EqualError(t, err, "id tidak ditemukan")
+	})
+
+	t.Run("delete success", func(t *testing.T) {
+		now := time.Now()
+
+		note := entities.Note{
+			ID:       "id-123",
+			Title:    "delete note",
+			Content:  "delete content note",
+			CreateAt: now,
+			UpdateAt: now,
+			Owner:    "user-123",
+		}
+
+		err := repo.CreateNote(note)
+		assert.NoError(t, err)
+
+		err = repo.DeleteNoteById("id-123")
+
+		assert.NoError(t, err)
+
+		// Assert: pastikan data benar-benar sudah tidak ada
+		var deletedNote entities.Note
+		err = repo.DB.
+			Where("id = ?", "id-123").
+			First(&deletedNote).Error
+
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+	})
 }

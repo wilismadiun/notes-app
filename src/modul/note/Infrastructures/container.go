@@ -18,7 +18,12 @@ func NoteContainer(db *gorm.DB) *http.NoteHandler {
 		Generator: &generatorHandler,
 	}
 
+	DeleteNote := usecase.DeleteNote{
+		Repo: &repoHandler,
+	}
+
 	return &http.NoteHandler{
 		CreateHandler: &CreateNote,
+		Deletehandler: &DeleteNote,
 	}
 }
