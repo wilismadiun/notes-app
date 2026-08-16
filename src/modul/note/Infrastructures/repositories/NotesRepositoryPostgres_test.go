@@ -63,8 +63,6 @@ func Test_CreateNote(t *testing.T) {
 	assert.Equal(t, note.ID, expectedNote.ID)
 	assert.Equal(t, note.Title, expectedNote.Title)
 	assert.Equal(t, note.Owner, expectedNote.Owner)
-
-	repo.DB.Exec("DELETE FROM notes")
 }
 
 func Test_DeleteNote(t *testing.T) {
@@ -75,21 +73,12 @@ func Test_DeleteNote(t *testing.T) {
 	})
 
 	t.Run("delete success", func(t *testing.T) {
-		now := time.Now()
+		var existNote entities.Note
 
-		note := entities.Note{
-			ID:       "id-123",
-			Title:    "delete note",
-			Content:  "delete content note",
-			CreateAt: now,
-			UpdateAt: now,
-			Owner:    "user-123",
-		}
-
-		err := repo.DB.Create(&note).Error
+		err := repo.DB.Where("owner = ?", "user-123").First(&existNote).Error
 		assert.NoError(t, err)
 
-		err = repo.DeleteNoteById("id-123")
+		err = repo.DeleteNoteById(existNote.ID)
 
 		assert.NoError(t, err)
 
