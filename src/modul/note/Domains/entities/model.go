@@ -10,3 +10,8 @@ type Note struct {
 	UpdateAt time.Time
 	Owner    string
 }
+
+type CreateNoteResponse struct {
+	ID    string
+	Title string
+}
