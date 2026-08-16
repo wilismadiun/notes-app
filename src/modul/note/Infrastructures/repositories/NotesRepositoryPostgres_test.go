@@ -64,7 +64,7 @@ func Test_CreateNote(t *testing.T) {
 	assert.Equal(t, note.Title, expectedNote.Title)
 	assert.Equal(t, note.Owner, expectedNote.Owner)
 
-	// repo.db.Exec("DELETE FROM notes")
+	repo.DB.Exec("DELETE FROM notes")
 }
 
 func Test_DeleteNote(t *testing.T) {
