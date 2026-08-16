@@ -76,7 +76,7 @@ func Test_CreateNote(t *testing.T) {
 		Content:  "test content database",
 		CreateAt: now,
 		UpdateAt: now,
-		Owner:    "user-123",
+		Owner:    exisistUser.ID,
 	}
 
 	err = repo.CreateNote(note)
