@@ -87,6 +87,25 @@ func Test_DeleteNote(t *testing.T) {
 	})
 
 	t.Run("delete success", func(t *testing.T) {
+		now := time.Now()
+	
+		note := entities.Note{
+			ID:       id,
+			Title:    "test database",
+			Content:  "test content database",
+			CreateAt: now,
+			UpdateAt: now,
+			Owner:    "user-123",
+		}
+	
+		err := repo.CreateNote(note)
+	
+		assert.NoError(t, err)
+		log.Println("=============================ini adalah errornya yang pertama delete note========================")
+		log.Println(err)
+		log.Println("=============================ini adalah errornya========================")
+
+		
 		var existNote entities.Note
 		err := repo.DB.First(&existNote, "id = ?", id).Error
 		if err != nil {
@@ -105,7 +124,7 @@ func Test_DeleteNote(t *testing.T) {
 		assert.NoError(t, err)
 
 		var deletedNote entities.Note
-		err = repo.DB.First(&deletedNote, "id = ?", "id-123").Error
+		err = repo.DB.First(&deletedNote, "id = ?", id).Error
 
 		assert.Error(t, err)
 		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
