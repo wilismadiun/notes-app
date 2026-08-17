@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"log"
 	"notes-app/src/commons/database"
 	"notes-app/src/modul/note/Domains/entities"
 	entitiesUser "notes-app/src/modul/user/Domains/entities"
@@ -57,6 +58,11 @@ func Test_CreateNote(t *testing.T) {
 
 	var expectedNote entities.Note
 	err = repo.DB.Where("id = ?", id).First(&expectedNote).Error
+
+	
+	log.Println("=============================ini adalah errornya========================")
+	log.Println(err)
+	log.Println("=============================ini adalah errornya========================")
 
 	assert.NoError(t, err)
 	assert.Equal(t, note.ID, expectedNote.ID)
