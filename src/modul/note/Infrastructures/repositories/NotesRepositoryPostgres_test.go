@@ -60,11 +60,13 @@ func Test_CreateNote(t *testing.T) {
 	log.Println(err)
 	log.Println("=============================ini adalah errornya========================")
 
-	var expectedNote entities.Note
-	err = repo.DB.First(&expectedNote, "id = ?", id).Error
+	expectedNote := entities.Note{
+		ID: id,
+	}
+	err = repo.DB.First(&expectedNote).Error
 
 	
-	log.Println("=============================ini adalah errornya========================")
+	log.Println("=============================ini adalah errornya create note========================")
 	log.Println(err)
 	log.Println("=============================ini adalah errornya========================")
 
