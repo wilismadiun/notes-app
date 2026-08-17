@@ -85,9 +85,8 @@ func Test_DeleteNote(t *testing.T) {
 	})
 
 	t.Run("delete success", func(t *testing.T) {
-		existNote := entities.Note{ID: "id-123"}
-		
-		err := repo.DB.First(&existNote).Error
+		var existNote entities.Note
+		err := repo.DB.Where("owner = ?", "user-123").First(&existNote).Error
 		if err != nil {
 			log.Println("=============================================")
 			log.Println("Data note tidak ditemukan")
