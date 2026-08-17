@@ -87,7 +87,7 @@ func Test_DeleteNote(t *testing.T) {
 	})
 
 	t.Run("delete success", func(t *testing.T) {
-		var id2 := uuid.New().String()
+		id2 := uuid.New().String()
 		now := time.Now()
 	
 		note := entities.Note{
