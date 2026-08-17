@@ -68,6 +68,10 @@ func Test_CreateNote(t *testing.T) {
 	repo.DB.Exec("DELETE FROM notes")
 }
 
+func Test_UserExisist(t *testing.T) {
+
+}
+
 func Test_DeleteNote(t *testing.T) {
 	t.Run("should be error when id not found", func(t *testing.T) {
 		err := repo.DeleteNoteById("note-123")
@@ -90,6 +94,24 @@ func Test_DeleteNote(t *testing.T) {
 		}
 
 		err := repo.CreateNote(note)
+		assert.NoError(t, err)
+
+		var existingUser entitiesUser.User
+
+		err = repo.DB.
+			Where("id = ?", userId).
+			First(&existingUser).Error
+
+		fmt.Println("==========================================")
+		fmt.Println("OWNER :", note.Owner)
+		fmt.Println("USER  :", existingUser.ID)
+		fmt.Println("ERROR :", err)
+		fmt.Println("==========================================")
+
+		assert.NoError(t, err)
+
+		err = repo.CreateNote(note)
+
 		assert.NoError(t, err)
 
 		exisistNote := entities.Note{ID: id}
