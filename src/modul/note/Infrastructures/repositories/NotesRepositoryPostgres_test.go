@@ -107,7 +107,7 @@ func Test_DeleteNote(t *testing.T) {
 
 		
 		var existNote entities.Note
-		err := repo.DB.First(&existNote, "id = ?", id).Error
+		err = repo.DB.First(&existNote, "id = ?", id).Error
 		if err != nil {
 			log.Println("=============================================")
 			log.Println("Data note tidak ditemukan")
