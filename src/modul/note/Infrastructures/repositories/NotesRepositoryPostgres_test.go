@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
@@ -41,7 +42,7 @@ func TestMain(m *testing.M) {
 
 func Test_CreateNote(t *testing.T) {
 	now := time.Now()
-	id := "id-123"
+	id := uuid.New().String()
 
 	note := entities.Note{
 		ID:       id,
