@@ -16,6 +16,8 @@ import (
 
 var repo *NoteRepository
 var userId = fmt.Sprintf("user-%s", uuid.New().String())
+var noteId = fmt.Sprintf("note-%s", uuid.New().String())
+var now = time.Now()
 
 func TestMain(m *testing.M) {
 	database.ConnectPostgresql(".test.env")
@@ -24,29 +26,23 @@ func TestMain(m *testing.M) {
 		DB: database.DB,
 	}
 
-	user := entitiesUser.User{
-		ID:       userId,
-		Username: "Jaya123",
-		Password: "pass-123",
-	}
-
-	err := repo.DB.Create(&user).Error
-	if err != nil {
-		panic(err)
-	}
-
 	code := m.Run()
 
-	repo.DB.Exec("DELETE FROM users")
 	os.Exit(code)
 }
 
 func Test_CreateNote(t *testing.T) {
-	now := time.Now()
-	id := uuid.New().String()
+	user := entitiesUser.User{
+		ID:       userId,
+		Username: "Jaya 123",
+		Password: "12345678",
+	}
+
+	err := repo.DB.Create(&user).Error
+	assert.NoError(t, err)
 
 	note := entities.Note{
-		ID:       id,
+		ID:       noteId,
 		Title:    "test database",
 		Content:  "test content database",
 		CreateAt: now,
@@ -54,22 +50,21 @@ func Test_CreateNote(t *testing.T) {
 		Owner:    userId,
 	}
 
-	err := repo.CreateNote(note)
+	err = repo.CreateNote(note)
 	assert.NoError(t, err)
 
-	expectedNote := entities.Note{ID: id}
-	err = repo.DB.First(&expectedNote).Error
+	exisistNote := entities.Note{
+		ID: noteId,
+	}
+	err = repo.DB.First(&exisistNote).Error
 
 	assert.NoError(t, err)
-	assert.Equal(t, note.ID, expectedNote.ID)
-	assert.Equal(t, note.Title, expectedNote.Title)
-	assert.Equal(t, note.Owner, expectedNote.Owner, gorm.ErrRecordNotFound)
+	assert.Equal(t, note.ID, exisistNote.ID)
+	assert.Equal(t, note.Title, exisistNote.Title)
+	assert.Equal(t, note.Owner, exisistNote.Owner, gorm.ErrRecordNotFound)
 
 	repo.DB.Exec("DELETE FROM notes")
-}
-
-func Test_UserExisist(t *testing.T) {
-
+	repo.DB.Exec("DELETE FROM users")
 }
 
 func Test_DeleteNote(t *testing.T) {
@@ -81,11 +76,17 @@ func Test_DeleteNote(t *testing.T) {
 	})
 
 	t.Run("delete note success", func(t *testing.T) {
-		now := time.Now()
-		id := uuid.New().String()
+		user := entitiesUser.User{
+			ID:       userId,
+			Username: "Jaya 123",
+			Password: "12345678",
+		}
+
+		err := repo.DB.Create(&user).Error
+		assert.NoError(t, err)
 
 		note := entities.Note{
-			ID:       id,
+			ID:       noteId,
 			Title:    "test database",
 			Content:  "test content database",
 			CreateAt: now,
@@ -93,44 +94,31 @@ func Test_DeleteNote(t *testing.T) {
 			Owner:    userId,
 		}
 
-		err := repo.CreateNote(note)
-		assert.NoError(t, err)
-
-		var existingUser entitiesUser.User
-
-		err = repo.DB.
-			Where("id = ?", userId).
-			First(&existingUser).Error
-
-		fmt.Println("==========================================")
-		fmt.Println("OWNER :", note.Owner)
-		fmt.Println("USER  :", existingUser.ID)
-		fmt.Println("ERROR :", err)
-		fmt.Println("==========================================")
-
-		assert.NoError(t, err)
-
 		err = repo.CreateNote(note)
-
 		assert.NoError(t, err)
 
-		exisistNote := entities.Note{ID: id}
+		exisistNote := entities.Note{
+			ID: noteId,
+		}
 
 		err = repo.DB.First(&exisistNote).Error
 		assert.NoError(t, err)
 		assert.Equal(t, note.Title, exisistNote.Title)
 		assert.Equal(t, note.Content, exisistNote.Content)
 
-		err = repo.DeleteNoteById(id)
+		err = repo.DeleteNoteById(noteId)
 
 		assert.NoError(t, err)
 
 		newExisistNote := entities.Note{
-			ID: id,
+			ID: noteId,
 		}
 
 		err = repo.DB.First(&newExisistNote).Error
 		assert.Error(t, err)
 		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+
+		repo.DB.Exec("DELETE FROM notes")
+		repo.DB.Exec("DELETE FROM users")
 	})
 }
