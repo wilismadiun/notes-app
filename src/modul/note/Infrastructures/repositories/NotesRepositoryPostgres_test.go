@@ -122,3 +122,45 @@ func Test_DeleteNote(t *testing.T) {
 		repo.DB.Exec("DELETE FROM users")
 	})
 }
+
+func Test_FindNoteById(t *testing.T) {
+	t.Run("should be error when id not foun", func(t *testing.T) {
+		note, err := repo.FindNoteById(noteId)
+
+		assert.Error(t, err)
+		assert.EqualError(t, err, "id tidak ditemukan")
+		assert.Empty(t, note)
+	})
+
+	t.Run("should be error when id not foun", func(t *testing.T) {
+		user := entitiesUser.User{
+			ID:       userId,
+			Username: "Jaya 123",
+			Password: "12345678",
+		}
+
+		err := repo.DB.Create(&user).Error
+		assert.NoError(t, err)
+
+		note := entities.Note{
+			ID:       noteId,
+			Title:    "test database",
+			Content:  "test content database",
+			CreateAt: now,
+			UpdateAt: now,
+			Owner:    userId,
+		}
+
+		err = repo.CreateNote(note)
+		assert.NoError(t, err)
+
+		exisistNote, err := repo.FindNoteById(noteId)
+		assert.NoError(t, err)
+		assert.Equal(t, note.ID, exisistNote.ID)
+		assert.Equal(t, note.Title, exisistNote.Title)
+		assert.Equal(t, note.Content, exisistNote.Content)
+
+		repo.DB.Exec("DELETE FROM notes")
+		repo.DB.Exec("DELETE FROM users")
+	})
+}

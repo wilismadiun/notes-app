@@ -20,6 +20,22 @@ func (h *NoteRepository) CreateNote(note entities.Note) error {
 	return nil
 }
 
+func (h *NoteRepository) FindNoteById(id string) (entities.Note, error) {
+	exisistNote := entities.Note{
+		ID: id,
+	}
+
+	err := h.DB.First(&exisistNote).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return entities.Note{}, errors.New("id tidak ditemukan")
+		}
+		return entities.Note{}, err
+	}
+
+	return exisistNote, nil
+}
+
 func (h *NoteRepository) DeleteNoteById(id string) error {
 	var note entities.Note
 
