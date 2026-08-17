@@ -84,7 +84,7 @@ func Test_DeleteNote(t *testing.T) {
 	})
 
 	t.Run("delete success", func(t *testing.T) {
-		existNote entities.Note{
+		existNote := entities.Note{
 			Owner:    "user-123",
 		}
 
