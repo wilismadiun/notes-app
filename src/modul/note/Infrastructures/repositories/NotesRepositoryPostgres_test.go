@@ -87,10 +87,11 @@ func Test_DeleteNote(t *testing.T) {
 	})
 
 	t.Run("delete success", func(t *testing.T) {
+		var id2 := uuid.New().String()
 		now := time.Now()
 	
 		note := entities.Note{
-			ID:       id,
+			ID:       id2,
 			Title:    "test database",
 			Content:  "test content database",
 			CreateAt: now,
@@ -107,7 +108,7 @@ func Test_DeleteNote(t *testing.T) {
 
 		
 		var existNote entities.Note
-		err = repo.DB.First(&existNote, "id = ?", id).Error
+		err = repo.DB.First(&existNote, "id = ?", id2).Error
 		if err != nil {
 			log.Println("=============================================")
 			log.Println("Data note tidak ditemukan")
