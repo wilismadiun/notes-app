@@ -76,38 +76,40 @@ func Test_CreateNote(t *testing.T) {
 }
 
 
-// func Test_DeleteNote(t *testing.T) {
-// 	t.Run("id not found", func(t *testing.T) {
-// 		err := repo.DeleteNoteById("id-123")
+func Test_DeleteNote(t *testing.T) {
+	t.Run("id not found", func(t *testing.T) {
+		err := repo.DeleteNoteById("id-123")
 
-// 		assert.EqualError(t, err, "id tidak ditemukan")
-// 	})
+		assert.EqualError(t, err, "id tidak ditemukan")
+	})
 
-// 	t.Run("delete success", func(t *testing.T) {
-// 		var existNote entities.Note
+	t.Run("delete success", func(t *testing.T) {
+		existNote entities.Note{
+			Owner:    "user-123",
+		}
 
-// 		err := repo.DB.Where("owner = ?", "user-123").First(&existNote).Error
-// 		if err != nil {
-// 			log.Println("=============================================")
-// 			log.Println("Data note tidak ditemukan")
-// 			log.Println("=============================================")
-// 		} else {
-// 			log.Println("=============================================")
-// 			log.Println("Data note ditemukan")
-// 			log.Println(existNote.ID)
-// 			log.Println("=============================================")
-// 		}
+		err := repo.DB.First(&existNote).Error
+		if err != nil {
+			log.Println("=============================================")
+			log.Println("Data note tidak ditemukan")
+			log.Println("=============================================")
+		} else {
+			log.Println("=============================================")
+			log.Println("Data note ditemukan")
+			log.Println(existNote.ID)
+			log.Println("=============================================")
+		}
 
-// 		err = repo.DeleteNoteById(existNote.ID)
+		err = repo.DeleteNoteById(existNote.ID)
 
-// 		assert.NoError(t, err)
+		assert.NoError(t, err)
 
-// 		var deletedNote entities.Note
-// 		err = repo.DB.
-// 			Where("id = ?", "id-123").
-// 			First(&deletedNote).Error
+		var deletedNote entities.Note
+		err = repo.DB.
+			Where("id = ?", "id-123").
+			First(&deletedNote).Error
 
-// 		assert.Error(t, err)
-// 		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
-// 	})
-// }
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+	})
+}
