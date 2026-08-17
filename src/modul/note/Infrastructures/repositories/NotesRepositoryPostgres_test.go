@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"fmt"
 	"notes-app/src/commons/database"
 	"notes-app/src/modul/note/Domains/entities"
 	entitiesUser "notes-app/src/modul/user/Domains/entities"
@@ -14,6 +15,7 @@ import (
 )
 
 var repo *NoteRepository
+var userId = fmt.Sprintf("user-%s", uuid.New().String())
 
 func TestMain(m *testing.M) {
 	database.ConnectPostgresql(".test.env")
@@ -23,7 +25,7 @@ func TestMain(m *testing.M) {
 	}
 
 	user := entitiesUser.User{
-		ID:       "user-123",
+		ID:       userId,
 		Username: "Jaya123",
 		Password: "pass-123",
 	}
@@ -49,7 +51,7 @@ func Test_CreateNote(t *testing.T) {
 		Content:  "test content database",
 		CreateAt: now,
 		UpdateAt: now,
-		Owner:    "user-123",
+		Owner:    userId,
 	}
 
 	err := repo.CreateNote(note)
@@ -84,7 +86,7 @@ func Test_DeleteNote(t *testing.T) {
 			Content:  "test content database",
 			CreateAt: now,
 			UpdateAt: now,
-			Owner:    "user-123",
+			Owner:    userId,
 		}
 
 		err := repo.CreateNote(note)
@@ -101,7 +103,9 @@ func Test_DeleteNote(t *testing.T) {
 
 		assert.NoError(t, err)
 
-		newExisistNote := entities.Note{ID: id}
+		newExisistNote := entities.Note{
+			ID: id,
+		}
 
 		err = repo.DB.First(&newExisistNote).Error
 		assert.Error(t, err)
