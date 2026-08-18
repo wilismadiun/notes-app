@@ -40,7 +40,7 @@ func Test_EditNoteById(t *testing.T) {
 	t.Run("should be error when id not found", func(t *testing.T) {
 		mockRepo.EXPECT().FindNoteById(noteId).Return(entities.Note{}, errors.New("id tidak ditemukan"))
 
-		id, err := en.execute(noteId, editNotePayload)
+		id, err := en.Execute(noteId, editNotePayload)
 
 		assert.Error(t, err)
 		assert.EqualError(t, err, "id tidak ditemukan")
@@ -59,7 +59,7 @@ func Test_EditNoteById(t *testing.T) {
 	t.Run("should be error when note to edit not found", func(t *testing.T) {
 		mockRepo.EXPECT().FindNoteById(noteId).Return(note, nil)
 
-		id, err := en.execute(noteId, editNotePayload)
+		id, err := en.Execute(noteId, editNotePayload)
 
 		assert.Error(t, err)
 		assert.EqualError(t, err, "Tidak ada data yang dikirim untuk diubah")
@@ -74,7 +74,7 @@ func Test_EditNoteById(t *testing.T) {
 
 		mockRepo.EXPECT().EditNoteById(note, editNoteMap).Return(nil)
 
-		id, err := en.execute(noteId, editNotePayload)
+		id, err := en.Execute(noteId, editNotePayload)
 
 		assert.NoError(t, err)
 		assert.Equal(t, noteId, id)

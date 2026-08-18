@@ -9,9 +9,10 @@ import (
 )
 
 type NoteHandler struct {
-	CreateHandler      *usecase.CreateNote
-	GetNoteByIdhandler *usecase.GetNoteById
-	Deletehandler      *usecase.DeleteNote
+	CreateHandler       *usecase.CreateNote
+	GetNoteByIdhandler  *usecase.GetNoteById
+	EditNoteByIdHandler *usecase.EditNoteById
+	Deletehandler       *usecase.DeleteNote
 }
 
 func (h *NoteHandler) AddNote(c *gin.Context) {
@@ -42,24 +43,6 @@ func (h *NoteHandler) AddNote(c *gin.Context) {
 
 }
 
-func (h *NoteHandler) DeleteNote(c *gin.Context) {
-	id := c.Param("id")
-
-	existId, err := h.Deletehandler.Execute(id)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "gagal menghapus note",
-			"error":   err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"message": "berhasil menghapus note",
-		"data":    existId,
-	})
-}
-
 func (h *NoteHandler) GetNoteById(c *gin.Context) {
 	id := c.Param("id")
 
@@ -75,5 +58,51 @@ func (h *NoteHandler) GetNoteById(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "note berhasil ditampilkan",
 		"data":    note,
+	})
+}
+
+func (h *NoteHandler) EditNoteById(c *gin.Context) {
+	id := c.Param("id")
+	var updateNote entities.EditNoteRequest
+
+	err := c.ShouldBindBodyWithJSON(&updateNote)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "gagal memperbarui note",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	exisistId, err := h.EditNoteByIdHandler.Execute(id, updateNote)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "gagal memperbarui note",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Note berhasil diperbarui",
+		"data":    exisistId,
+	})
+}
+
+func (h *NoteHandler) DeleteNote(c *gin.Context) {
+	id := c.Param("id")
+
+	existId, err := h.Deletehandler.Execute(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "gagal menghapus note",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "berhasil menghapus note",
+		"data":    existId,
 	})
 }

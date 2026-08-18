@@ -11,7 +11,7 @@ type EditNoteById struct {
 	Repo domains.NotesRepository
 }
 
-func (h *EditNoteById) execute(id string, payload entities.EditNoteRequest) (string, error) {
+func (h *EditNoteById) Execute(id string, payload entities.EditNoteRequest) (string, error) {
 	note, err := h.Repo.FindNoteById(id)
 	if err != nil {
 		return "", err

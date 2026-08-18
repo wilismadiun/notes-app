@@ -299,6 +299,152 @@ func Test_GetNoteById(t *testing.T) {
 	database.DB.Exec("DELETE FROM users")
 }
 
+func Test_EditNoteModul(t *testing.T) {
+	router := gin.New()
+	Router(router, database.DB)
+
+	user := entities.User{
+		ID:       "user-1234",
+		Username: "Jaya1234",
+		Password: "pass123",
+	}
+
+	err := database.DB.Create(&user).Error
+	assert.NoError(t, err)
+
+	t.Run("should be error when id not found", func(t *testing.T) {
+		body := []byte(`{
+			"title": "new title",
+			"content": "new content"
+		}`)
+
+		req := httptest.NewRequest(
+			http.MethodPatch,
+			"/note/note-123",
+			bytes.NewBuffer(body),
+		)
+
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		responseExpected := fmt.Sprintln(`{
+			"message": "gagal memperbarui note",
+			"error": "id tidak ditemukan"
+		}`)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, responseExpected, w.Body.String())
+	})
+
+	now := time.Now().Truncate(time.Microsecond)
+
+	note := entitiesNote.Note{
+		ID:       "note-123",
+		Title:    "title",
+		Content:  "content",
+		CreateAt: now,
+		UpdateAt: now,
+		Owner:    user.ID,
+	}
+
+	err = database.DB.Create(&note).Error
+	assert.NoError(t, err)
+
+	t.Run("should be error when note to edit not found", func(t *testing.T) {
+		body := []byte(`{
+			"title": null,
+			"content": null
+		}`)
+
+		req := httptest.NewRequest(
+			http.MethodPatch,
+			"/note/note-123",
+			bytes.NewBuffer(body),
+		)
+
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		responseExpected := fmt.Sprintln(`{
+			"message": "gagal memperbarui note",
+			"error": "Tidak ada data yang dikirim untuk diubah"
+		}`)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, responseExpected, w.Body.String())
+	})
+
+	t.Run("should success update note when only updating title", func(t *testing.T) {
+		body := []byte(`{
+			"title": "new title"
+		}`)
+
+		req := httptest.NewRequest(
+			http.MethodPatch,
+			"/note/note-123",
+			bytes.NewBuffer(body),
+		)
+
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		responseExpected := fmt.Sprintln(`{
+			"message": "Note berhasil diperbarui",
+			"data": "note-123"
+		}`)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, responseExpected, w.Body.String())
+
+		exisistNote := entitiesNote.Note{
+			ID: "note-123",
+		}
+		err := database.DB.First(&exisistNote).Error
+		assert.NoError(t, err)
+
+		assert.Equal(t, "new title", exisistNote.Title)
+	})
+	t.Run("should success update note when updating title and content", func(t *testing.T) {
+		body := []byte(`{
+			"title": "update new title",
+			"content": "new content"
+		}`)
+
+		req := httptest.NewRequest(
+			http.MethodPatch,
+			"/note/note-123",
+			bytes.NewBuffer(body),
+		)
+
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		responseExpected := fmt.Sprintln(`{
+			"message": "Note berhasil diperbarui",
+			"data": "note-123"
+		}`)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, responseExpected, w.Body.String())
+
+		exisistNote := entitiesNote.Note{
+			ID: "note-123",
+		}
+		err := database.DB.First(&exisistNote).Error
+		assert.NoError(t, err)
+
+		assert.Equal(t, "update new title", exisistNote.Title)
+		assert.Equal(t, "new content", exisistNote.Content)
+	})
+
+	database.DB.Exec("DELETE FROM notes")
+	database.DB.Exec("DELETE FROM users")
+}
+
 func Test_DeleteNoteModul(t *testing.T) {
 	router := gin.New()
 
