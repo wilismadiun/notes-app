@@ -2,6 +2,7 @@ package app
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -219,6 +220,80 @@ func TestNoteModul(t *testing.T) {
 		assert.JSONEq(t, expectedResponse, w.Body.String())
 
 		// Cleanup
+		database.DB.Exec("DELETE FROM notes")
+	})
+	database.DB.Exec("DELETE FROM users")
+}
+
+func Test_GetNoteById(t *testing.T) {
+	router := gin.New()
+
+	Router(router, database.DB)
+
+	user := entities.User{
+		ID:       "user-1234",
+		Username: "Jaya1234",
+		Password: "pass123",
+	}
+
+	err := database.DB.Create(&user).Error
+	assert.NoError(t, err)
+
+	t.Run("should response 400 when id not found", func(t *testing.T) {
+		req := httptest.NewRequest(
+			http.MethodGet,
+			"/note/id-123",
+			nil,
+		)
+
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		response := fmt.Sprintln(`{
+			"message": "gagal menampilkan note",
+			"error": "id tidak ditemukan"
+		}`)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, response, w.Body.String())
+	})
+
+	t.Run("get note by id success", func(t *testing.T) {
+		now := time.Now().Truncate(time.Microsecond)
+
+		note := entitiesNote.Note{
+			ID:       "id-1234",
+			Title:    "delete note",
+			Content:  "delete content note",
+			CreateAt: now,
+			UpdateAt: now,
+			Owner:    "user-1234",
+		}
+
+		err := database.DB.Create(&note).Error
+		assert.NoError(t, err)
+
+		req := httptest.NewRequest(
+			http.MethodGet,
+			"/note/id-1234",
+			nil,
+		)
+
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		noteJSON, _ := json.Marshal(note)
+
+		response := fmt.Sprintf(`{
+			"message": "note berhasil ditampilkan",
+			"data": %s
+		}`, noteJSON)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, response, w.Body.String())
+
 		database.DB.Exec("DELETE FROM notes")
 	})
 	database.DB.Exec("DELETE FROM users")
