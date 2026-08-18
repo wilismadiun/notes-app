@@ -36,6 +36,19 @@ func (h *NoteRepository) FindNoteById(id string) (entities.Note, error) {
 	return exisistNote, nil
 }
 
+func (h *NoteRepository) EditNoteById(note entities.Note, update map[string]any) error {
+	result := h.DB.Model(&note).Updates(update)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return errors.New("id tidak ditemukan")
+	}
+
+	return nil
+}
+
 func (h *NoteRepository) DeleteNoteById(id string) error {
 	var note entities.Note
 

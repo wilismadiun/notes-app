@@ -67,6 +67,104 @@ func Test_CreateNote(t *testing.T) {
 	repo.DB.Exec("DELETE FROM users")
 }
 
+func Test_FindNoteById(t *testing.T) {
+	t.Run("should be error when id not foun", func(t *testing.T) {
+		note, err := repo.FindNoteById(noteId)
+
+		assert.Error(t, err)
+		assert.EqualError(t, err, "id tidak ditemukan")
+		assert.Empty(t, note)
+	})
+
+	t.Run("should be error when id not foun", func(t *testing.T) {
+		user := entitiesUser.User{
+			ID:       userId,
+			Username: "Jaya 123",
+			Password: "12345678",
+		}
+
+		err := repo.DB.Create(&user).Error
+		assert.NoError(t, err)
+
+		note := entities.Note{
+			ID:       noteId,
+			Title:    "test database",
+			Content:  "test content database",
+			CreateAt: now,
+			UpdateAt: now,
+			Owner:    userId,
+		}
+
+		err = repo.CreateNote(note)
+		assert.NoError(t, err)
+
+		exisistNote, err := repo.FindNoteById(noteId)
+		assert.NoError(t, err)
+		assert.Equal(t, note.ID, exisistNote.ID)
+		assert.Equal(t, note.Title, exisistNote.Title)
+		assert.Equal(t, note.Content, exisistNote.Content)
+
+		repo.DB.Exec("DELETE FROM notes")
+		repo.DB.Exec("DELETE FROM users")
+	})
+}
+
+func Test_EditNoteById(t *testing.T) {
+	now := time.Now().Truncate(time.Microsecond)
+
+	user := entitiesUser.User{
+		ID:       "user-1234",
+		Username: "Jaya1234",
+		Password: "pass-123",
+	}
+
+	note := entities.Note{
+		ID:       "id-123",
+		Title:    "title",
+		Content:  "content",
+		CreateAt: now,
+		UpdateAt: now,
+		Owner:    user.ID,
+	}
+
+	editNote := map[string]any{
+		"title":    "new title",
+		"content":  "noew content",
+		"updateAt": time.Now().Truncate(time.Microsecond),
+	}
+
+	err := database.DB.Create(&user).Error
+	assert.NoError(t, err)
+
+	t.Run("should be error when id not found", func(t *testing.T) {
+		err = repo.EditNoteById(note, editNote)
+
+		assert.Error(t, err)
+		assert.EqualError(t, err, "id tidak ditemukan")
+	})
+
+	t.Run("edit note success", func(t *testing.T) {
+		err = repo.CreateNote(note)
+		assert.NoError(t, err)
+
+		err = repo.EditNoteById(note, editNote)
+
+		assert.NoError(t, err)
+
+		exisistNote, err := repo.FindNoteById(note.ID)
+
+		assert.NoError(t, err)
+		assert.Equal(t, note.ID, exisistNote.ID)
+		assert.Equal(t, editNote["title"], exisistNote.Title)
+		assert.Equal(t, editNote["content"], exisistNote.Content)
+		assert.Equal(t, editNote["updateAt"], exisistNote.UpdateAt)
+
+		database.DB.Exec("DELETE FROM notes")
+	})
+
+	database.DB.Exec("DELETE FROM users")
+}
+
 func Test_DeleteNote(t *testing.T) {
 	t.Run("should be error when id not found", func(t *testing.T) {
 		err := repo.DeleteNoteById("note-123")
@@ -117,48 +215,6 @@ func Test_DeleteNote(t *testing.T) {
 		err = repo.DB.First(&newExisistNote).Error
 		assert.Error(t, err)
 		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
-
-		repo.DB.Exec("DELETE FROM notes")
-		repo.DB.Exec("DELETE FROM users")
-	})
-}
-
-func Test_FindNoteById(t *testing.T) {
-	t.Run("should be error when id not foun", func(t *testing.T) {
-		note, err := repo.FindNoteById(noteId)
-
-		assert.Error(t, err)
-		assert.EqualError(t, err, "id tidak ditemukan")
-		assert.Empty(t, note)
-	})
-
-	t.Run("should be error when id not foun", func(t *testing.T) {
-		user := entitiesUser.User{
-			ID:       userId,
-			Username: "Jaya 123",
-			Password: "12345678",
-		}
-
-		err := repo.DB.Create(&user).Error
-		assert.NoError(t, err)
-
-		note := entities.Note{
-			ID:       noteId,
-			Title:    "test database",
-			Content:  "test content database",
-			CreateAt: now,
-			UpdateAt: now,
-			Owner:    userId,
-		}
-
-		err = repo.CreateNote(note)
-		assert.NoError(t, err)
-
-		exisistNote, err := repo.FindNoteById(noteId)
-		assert.NoError(t, err)
-		assert.Equal(t, note.ID, exisistNote.ID)
-		assert.Equal(t, note.Title, exisistNote.Title)
-		assert.Equal(t, note.Content, exisistNote.Content)
 
 		repo.DB.Exec("DELETE FROM notes")
 		repo.DB.Exec("DELETE FROM users")

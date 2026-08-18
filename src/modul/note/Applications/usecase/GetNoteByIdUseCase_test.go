@@ -33,7 +33,7 @@ func Test_FindNoteById(t *testing.T) {
 		assert.Empty(t, note)
 	})
 
-	t.Run("should be error when id not found", func(t *testing.T) {
+	t.Run("get note success", func(t *testing.T) {
 		note := entities.Note{
 			ID:       id,
 			Title:    "Title",

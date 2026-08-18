@@ -15,3 +15,8 @@ type CreateNoteResponse struct {
 	ID    string
 	Title string
 }
+
+type EditNoteRequest struct {
+	Title   *string `json:"title"`
+	Content *string `json:"content"`
+}

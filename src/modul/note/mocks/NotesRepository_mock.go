@@ -68,6 +68,20 @@ func (mr *MockNotesRepositoryMockRecorder) DeleteNoteById(id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNoteById", reflect.TypeOf((*MockNotesRepository)(nil).DeleteNoteById), id)
 }
 
+// EditNoteById mocks base method.
+func (m *MockNotesRepository) EditNoteById(note entities.Note, update map[string]any) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EditNoteById", note, update)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// EditNoteById indicates an expected call of EditNoteById.
+func (mr *MockNotesRepositoryMockRecorder) EditNoteById(note, update any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EditNoteById", reflect.TypeOf((*MockNotesRepository)(nil).EditNoteById), note, update)
+}
+
 // FindNoteById mocks base method.
 func (m *MockNotesRepository) FindNoteById(id string) (entities.Note, error) {
 	m.ctrl.T.Helper()
