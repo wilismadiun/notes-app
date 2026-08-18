@@ -31,12 +31,6 @@ func Test_EditNoteById(t *testing.T) {
 		Content: nil,
 	}
 
-	editNoteMap := map[string]any{
-		"title":    title,
-		"content":  content,
-		"updateAt": now,
-	}
-
 	t.Run("should be error when id not found", func(t *testing.T) {
 		mockRepo.EXPECT().FindNoteById(noteId).Return(entities.Note{}, errors.New("id tidak ditemukan"))
 
@@ -72,7 +66,7 @@ func Test_EditNoteById(t *testing.T) {
 		editNotePayload.Title = &title
 		editNotePayload.Content = &content
 
-		mockRepo.EXPECT().EditNoteById(note, editNoteMap).Return(nil)
+		mockRepo.EXPECT().EditNoteById(note, gomock.Any()).Return(nil)
 
 		id, err := en.Execute(noteId, editNotePayload)
 

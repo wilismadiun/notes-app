@@ -124,7 +124,7 @@ func Test_EditNoteById(t *testing.T) {
 		Content:  "content",
 		CreateAt: now,
 		UpdateAt: now,
-		Owner:    user.ID,
+		Owner:    "user-1234",
 	}
 
 	editNote := map[string]any{

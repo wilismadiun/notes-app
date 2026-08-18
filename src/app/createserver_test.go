@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"notes-app/src/commons/database"
@@ -377,9 +378,16 @@ func Test_EditNoteModul(t *testing.T) {
 	})
 
 	t.Run("should success update note when only updating title", func(t *testing.T) {
+		log.Println("===================================only title sebelum edit======================================")
+		note1 := entitiesNote.Note{
+			ID: "note-123",
+		}
+		database.DB.First(&note1)
+		log.Println(note1)
+		log.Println("===================================only title sebelum edit======================================")
 		body := []byte(`{
 			"title": "new title"
-		}`)
+			}`)
 
 		req := httptest.NewRequest(
 			http.MethodPatch,
@@ -390,6 +398,14 @@ func Test_EditNoteModul(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		router.ServeHTTP(w, req)
+
+		log.Println("===================================only title setelah edit======================================")
+		note2 := entitiesNote.Note{
+			ID: "note-123",
+		}
+		database.DB.First(&note2)
+		log.Println(note2)
+		log.Println("===================================only title sebelum edit======================================")
 
 		responseExpected := fmt.Sprintln(`{
 			"message": "Note berhasil diperbarui",
@@ -407,7 +423,16 @@ func Test_EditNoteModul(t *testing.T) {
 
 		assert.Equal(t, "new title", exisistNote.Title)
 	})
+
 	t.Run("should success update note when updating title and content", func(t *testing.T) {
+		log.Println("===================================title & content sebelum edit======================================")
+		note3 := entitiesNote.Note{
+			ID: "note-123",
+		}
+		database.DB.First(&note3)
+		log.Println(note3)
+		log.Println("===================================title & content sebelum edit======================================")
+
 		body := []byte(`{
 			"title": "update new title",
 			"content": "new content"
@@ -423,6 +448,14 @@ func Test_EditNoteModul(t *testing.T) {
 
 		router.ServeHTTP(w, req)
 
+		log.Println("===================================title & content sebelum edit======================================")
+		note4 := entitiesNote.Note{
+			ID: "note-123",
+		}
+		database.DB.First(&note4)
+		log.Println(note4)
+		log.Println("===================================title & content sebelum edit======================================")
+
 		responseExpected := fmt.Sprintln(`{
 			"message": "Note berhasil diperbarui",
 			"data": "note-123"
@@ -434,6 +467,7 @@ func Test_EditNoteModul(t *testing.T) {
 		exisistNote := entitiesNote.Note{
 			ID: "note-123",
 		}
+
 		err := database.DB.First(&exisistNote).Error
 		assert.NoError(t, err)
 
