@@ -247,15 +247,12 @@ func Test_CreateServer(t *testing.T) {
 			// Mendapatkan token authentication
 			data := dataResponse["data"].(map[string]any)
 			authToken = data["token"].(string)
-			log.Println("============================response=======================")
-			log.Println(w.Body.String())
-			log.Println("============================data response=======================")
-			log.Printf("response adalah %s", dataResponse)
-			log.Println("============================authToken=======================")
-			log.Printf("Tokennya adalah %s", authToken)
 		})
 	})
 
+	log.Println("============================authToken=======================")
+	log.Printf("Tokennya adalah %s", authToken)
+	log.Println("============================authToken=======================")
 	var path string
 	t.Run("Create Note", func(t *testing.T) {
 		t.Run("response 401 when authorization is missing", func(t *testing.T) {
@@ -297,6 +294,10 @@ func Test_CreateServer(t *testing.T) {
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "Bearer "+authToken)
 
+			fmt.Println("==========================auth token di add note==============================")
+			fmt.Println(authToken)
+			fmt.Println("==========================auth token di add note==============================")
+
 			w := httptest.NewRecorder()
 
 			router.ServeHTTP(w, req)
@@ -321,6 +322,10 @@ func Test_CreateServer(t *testing.T) {
 			path = fmt.Sprintf("/api/note/%s", note.ID)
 		})
 	})
+
+	fmt.Println("=====================================ini adalah path==========================================")
+	fmt.Println(path)
+	fmt.Println("=====================================ini adalah path==========================================")
 
 	t.Run("Get Note by ID", func(t *testing.T) {
 		t.Run("should response 400 when authorization is missing", func(t *testing.T) {
