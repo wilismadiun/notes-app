@@ -125,7 +125,7 @@ func Test_CreateServer(t *testing.T) {
 
 			// Password di database harus sudah di-hash
 			assert.NotEqual(t, "12345678", user.Password)
-			hashPassword = user.Username
+			hashPassword = user.Password
 			log.Println("===============================ini adalah hash password=============================")
 			log.Println(hashPassword)
 			log.Println("===============================ini adalah hash password=============================")
@@ -142,6 +142,10 @@ func Test_CreateServer(t *testing.T) {
 			assert.JSONEq(t, userJson, w.Body.String())
 		})
 	})
+
+	log.Println("===============================ini adalah hash password lagi=============================")
+	log.Println(hashPassword)
+	log.Println("===============================ini adalah hash password lagi=============================")
 
 	var authToken string
 	t.Run("Login User", func(t *testing.T) {
