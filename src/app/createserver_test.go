@@ -250,8 +250,12 @@ func Test_CreateServer(t *testing.T) {
 		})
 	})
 
+	var userCoba entities.User
+	database.DB.First(&userCoba)
+
 	log.Println("============================authToken=======================")
 	log.Printf("Tokennya adalah %s", authToken)
+	log.Printf("User adalah \n %s", userCoba)
 	log.Println("============================authToken=======================")
 	var path string
 	t.Run("Create Note", func(t *testing.T) {
@@ -323,8 +327,11 @@ func Test_CreateServer(t *testing.T) {
 		})
 	})
 
+	var notecoba entitiesNote.Note
+	database.DB.First(&notecoba)
 	fmt.Println("=====================================ini adalah path==========================================")
 	fmt.Println(path)
+	fmt.Printf("ini adalah data note \n %s", notecoba)
 	fmt.Println("=====================================ini adalah path==========================================")
 
 	t.Run("Get Note by ID", func(t *testing.T) {
