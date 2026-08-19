@@ -210,8 +210,9 @@ func Test_CreateServer(t *testing.T) {
 		})
 
 		t.Run("login success", func(t *testing.T) {
-			var user entities.User
-			database.DB.First(&user)
+			var user []entities.User
+			database.DB.Find(&user)
+
 			log.Println("==============================ini adalah isi user pada login============================")
 			log.Println(user)
 			log.Println("==============================ini adalah isi user pada login============================")
