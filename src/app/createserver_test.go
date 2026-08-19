@@ -28,225 +28,214 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func Test_CreateUserModule(t *testing.T) {
-
+func Test_CreateServer(t *testing.T) {
 	router := gin.New()
 
 	Router(router, database.DB)
 
-	t.Run("should response 400 when password less than 8 character", func(t *testing.T) {
-		body := []byte(`{
-			"username":"jaya",
-			"email":"jaya@gmail.com",
-			"password":"123456"
-		}`)
+	t.Run("Create User", func(t *testing.T) {
+		t.Run("should response 400 when password less than 8 character", func(t *testing.T) {
+			body := []byte(`{
+				"username":"jaya",
+				"email":"jaya@gmail.com",
+				"password":"123456"
+			}`)
 
-		req := httptest.NewRequest(
-			http.MethodPost,
-			"/register",
-			bytes.NewBuffer(body),
-		)
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/register",
+				bytes.NewBuffer(body),
+			)
 
-		req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Content-Type", "application/json")
 
-		w := httptest.NewRecorder()
+			w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+			router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-		assert.JSONEq(t, `{
-			"message": "PASSWORD_TOO_SHORT"
-		}`, w.Body.String())
-	})
+			assert.Equal(t, http.StatusBadRequest, w.Code)
+			assert.JSONEq(t, `{
+				"message": "PASSWORD_TOO_SHORT"
+			}`, w.Body.String())
+		})
 
-	t.Run("should response 400 when username available", func(t *testing.T) {
-		user := entities.User{
-			ID:       uuid.New().String(),
-			Username: "jaya",
-			Password: "12345678",
-		}
-
-		database.DB.Table("users").Create(&user)
-
-		body := []byte(`{
-			"username": "jaya",
-			"email": "jaya@gmail.com",
-			"password": "12345678"
-		}`)
-
-		req := httptest.NewRequest(
-			http.MethodPost,
-			"/register",
-			bytes.NewBuffer(body),
-		)
-
-		req.Header.Set("Content-Type", "application/json")
-
-		w := httptest.NewRecorder()
-
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-		assert.JSONEq(t, `{
-			"message":"username sudah digunakan"
-		}`, w.Body.String())
-
-		database.DB.Exec("DELETE FROM users")
-	})
-
-	t.Run("Create user success", func(t *testing.T) {
-		body := []byte(`{
-		"username": "Jaya123",
-		"password": "12345678",
-		"email": "jaya@gmail.com"
-	}`)
-
-		req := httptest.NewRequest(
-			http.MethodPost,
-			"/register",
-			bytes.NewBuffer(body),
-		)
-		req.Header.Set("Content-Type", "application/json")
-
-		w := httptest.NewRecorder()
-
-		router.ServeHTTP(w, req)
-
-		// Ambil data dari database
-		var user entities.User
-		err := database.DB.
-			Where("username = ?", "Jaya123").
-			First(&user).Error
-
-		assert.NoError(t, err)
-
-		// Assert HTTP
-		assert.Equal(t, http.StatusCreated, w.Code)
-
-		// Password di database harus sudah di-hash
-		assert.NotEqual(t, "12345678", user.Password)
-
-		// Response harus sama dengan data di database
-		userJson := fmt.Sprintf(`{
-			"message": "Berhasil menambahkan user",
-			"data": {
-				"ID": "%s",
-				"Username": "%s"
+		t.Run("should response 400 when username available", func(t *testing.T) {
+			user := entities.User{
+				ID:       uuid.New().String(),
+				Username: "jaya",
+				Password: "12345678",
 			}
-		}`, user.ID, user.Username)
 
-		assert.JSONEq(t, userJson, w.Body.String())
-	})
-}
+			database.DB.Table("users").Create(&user)
 
-func Test_LoginUserModule(t *testing.T) {
-	router := gin.New()
+			body := []byte(`{
+				"username": "jaya",
+				"email": "jaya@gmail.com",
+				"password": "12345678"
+			}`)
 
-	Router(router, database.DB)
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/register",
+				bytes.NewBuffer(body),
+			)
 
-	t.Run("should be an error when the username doesn't exist", func(t *testing.T) {
-		body := []byte(`{
-			"username": "",
-			"password": "123456789"
-		}`)
+			req.Header.Set("Content-Type", "application/json")
 
-		req := httptest.NewRequest(
-			http.MethodPost,
-			"/login",
-			bytes.NewBuffer(body),
-		)
+			w := httptest.NewRecorder()
 
-		w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
 
-		router.ServeHTTP(w, req)
+			assert.Equal(t, http.StatusBadRequest, w.Code)
+			assert.JSONEq(t, `{
+				"message":"username sudah digunakan"
+			}`, w.Body.String())
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-		assert.JSONEq(t, `{
-			"message": "login gagal",
-			"error": "username atau Password tidak ada"
-		}`, w.Body.String())
-	})
+			database.DB.Exec("DELETE FROM users")
+		})
 
-	t.Run("There should be an error if the username isn't registered yet", func(t *testing.T) {
-		body := []byte(`{
-			"username": "Jaya12",
-			"password": "12345678"
-		}`)
-
-		req := httptest.NewRequest(
-			http.MethodPost,
-			"/login",
-			bytes.NewBuffer(body),
-		)
-
-		w := httptest.NewRecorder()
-
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-		assert.JSONEq(t, `{
-			"message": "login gagal",
-			"error": "username atau password salah"
-		}`, w.Body.String())
-	})
-
-	t.Run("There should be an error when the password does not match the password hash.", func(t *testing.T) {
-		body := []byte(`{
+		t.Run("Create user success", func(t *testing.T) {
+			body := []byte(`{
 			"username": "Jaya123",
-			"password": "123456789"
-		}`)
+			"password": "12345678",
+			"email": "jaya@gmail.com"
+			}`)
 
-		req := httptest.NewRequest(
-			http.MethodPost,
-			"/login",
-			bytes.NewBuffer(body),
-		)
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/register",
+				bytes.NewBuffer(body),
+			)
+			req.Header.Set("Content-Type", "application/json")
 
-		w := httptest.NewRecorder()
+			w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+			router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-		assert.JSONEq(t, `{
-			"message": "login gagal",
-			"error": "username atau password salah"
-		}`, w.Body.String())
+			// Ambil data dari database
+			var user entities.User
+			err := database.DB.
+				Where("username = ?", "Jaya123").
+				First(&user).Error
+
+			assert.NoError(t, err)
+
+			// Assert HTTP
+			assert.Equal(t, http.StatusCreated, w.Code)
+
+			// Password di database harus sudah di-hash
+			assert.NotEqual(t, "12345678", user.Password)
+
+			// Response harus sama dengan data di database
+			userJson := fmt.Sprintf(`{
+				"message": "Berhasil menambahkan user",
+				"data": {
+					"ID": "%s",
+					"Username": "%s"
+				}
+			}`, user.ID, user.Username)
+
+			assert.JSONEq(t, userJson, w.Body.String())
+		})
 	})
 
-	t.Run("login success", func(t *testing.T) {
-		body := []byte(`{
-		"username": "Jaya123",
-		"password": "12345678"
-		}`)
+	t.Run("Login User", func(t *testing.T) {
+		t.Run("should be an error when the username doesn't exist", func(t *testing.T) {
+			body := []byte(`{
+				"username": "",
+				"password": "123456789"
+			}`)
 
-		req := httptest.NewRequest(
-			http.MethodPost,
-			"/login",
-			bytes.NewBuffer(body),
-		)
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/login",
+				bytes.NewBuffer(body),
+			)
 
-		w := httptest.NewRecorder()
+			w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+			router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusOK, w.Code)
+			assert.Equal(t, http.StatusBadRequest, w.Code)
+			assert.JSONEq(t, `{
+				"message": "login gagal",
+				"error": "username atau Password tidak ada"
+			}`, w.Body.String())
+		})
 
-		var response map[string]any
+		t.Run("There should be an error if the username isn't registered yet", func(t *testing.T) {
+			body := []byte(`{
+				"username": "Jaya12",
+				"password": "12345678"
+			}`)
 
-		err := json.Unmarshal(w.Body.Bytes(), &response)
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/login",
+				bytes.NewBuffer(body),
+			)
 
-		assert.NoError(t, err)
-		assert.Equal(t, "login berhasil", response["message"])
-		assert.NotEmpty(t, response["data"])
+			w := httptest.NewRecorder()
+
+			router.ServeHTTP(w, req)
+
+			assert.Equal(t, http.StatusBadRequest, w.Code)
+			assert.JSONEq(t, `{
+				"message": "login gagal",
+				"error": "username atau password salah"
+			}`, w.Body.String())
+		})
+
+		t.Run("There should be an error when the password does not match the password hash.", func(t *testing.T) {
+			body := []byte(`{
+				"username": "Jaya123",
+				"password": "123456789"
+			}`)
+
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/login",
+				bytes.NewBuffer(body),
+			)
+
+			w := httptest.NewRecorder()
+
+			router.ServeHTTP(w, req)
+
+			assert.Equal(t, http.StatusBadRequest, w.Code)
+			assert.JSONEq(t, `{
+				"message": "login gagal",
+				"error": "username atau password salah"
+			}`, w.Body.String())
+		})
+
+		t.Run("login success", func(t *testing.T) {
+			body := []byte(`{
+			"username": "Jaya123",
+			"password": "12345678"
+			}`)
+
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/login",
+				bytes.NewBuffer(body),
+			)
+
+			w := httptest.NewRecorder()
+
+			router.ServeHTTP(w, req)
+
+			assert.Equal(t, http.StatusOK, w.Code)
+
+			var dataResponse map[string]any
+
+			err := json.Unmarshal(w.Body.Bytes(), &dataResponse)
+
+			assert.NoError(t, err)
+			assert.Equal(t, "login berhasil", dataResponse["message"])
+			assert.NotEmpty(t, dataResponse["data"])
+		})
 	})
-
-	// database.DB.Exec("DELETE FROM users")
-}
-
-func Test_CreateNoteModul(t *testing.T) {
-	router := gin.New()
-
-	Router(router, database.DB)
 
 	bodyLogin := []byte(`{
 		"username": "Jaya123",
@@ -272,394 +261,290 @@ func Test_CreateNoteModul(t *testing.T) {
 
 	assert.NoError(t, err)
 
+	// Mendapatkan token authentication
 	data := response["data"].(map[string]interface{})
 	authToken := data["token"].(string)
 	log.Printf("Tokennya adalah %s", authToken)
 
-	t.Run("response 401 when authorization is missing", func(t *testing.T) {
-		body := []byte(`{
-			"title": "Note1",
-			"content": "content note1"
-		}`)
-
-		req := httptest.NewRequest(
-			http.MethodPost,
-			"/api/note",
-			bytes.NewBuffer(body),
-		)
-
-		req.Header.Set("Content-Type", "application/json")
-
-		w := httptest.NewRecorder()
-
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
-		assert.JSONEq(t, `{
-			"message": "authorization header tidak ditemukan"
-		}`, w.Body.String())
-	})
-
-	t.Run("Add note success", func(t *testing.T) {
-		body := []byte(`{
-			"title": "Note1",
-			"content": "content note1"
-		}`)
-
-		req := httptest.NewRequest(
-			http.MethodPost,
-			"/api/note",
-			bytes.NewBuffer(body),
-		)
-
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+authToken)
-
-		w := httptest.NewRecorder()
-
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusCreated, w.Code)
-
-		var note entitiesNote.Note
-
-		err := database.DB.Where("title = ?", "Note1").First(&note).Error
-
-		assert.NoError(t, err)
-		expectedResponse := fmt.Sprintf(`{
-			"message": "note berhasil ditambahkan",
-			"data": {
-				"ID": "%s",
-				"Title": "%s"
-			}
-		}`, note.ID, note.Title)
-
-		assert.JSONEq(t, expectedResponse, w.Body.String())
-
-		// Cleanup
-		// database.DB.Exec("DELETE FROM notes")
-	})
-	// database.DB.Exec("DELETE FROM users")
-}
-
-func Test_GetNoteById(t *testing.T) {
-	router := gin.New()
-
-	Router(router, database.DB)
-
-	bodyLogin := []byte(`{
-		"username": "Jaya123",
-		"password": "12345678"
-	}`)
-
-	reqLogin := httptest.NewRequest(
-		http.MethodPost,
-		"/login",
-		bytes.NewBuffer(bodyLogin),
-	)
-
-	wLogin := httptest.NewRecorder()
-
-	router.ServeHTTP(wLogin, reqLogin)
-
-	var response map[string]interface{}
-
-	err := json.Unmarshal(
-		wLogin.Body.Bytes(),
-		&response,
-	)
-
-	assert.NoError(t, err)
-
-	data := response["data"].(map[string]interface{})
-	authToken := data["token"].(string)
-
-	var note entitiesNote.Note
-	err = database.DB.First(&note).Error
-	assert.NoError(t, err)
-
-	path := fmt.Sprintf("/api/note/%s", note.ID)
-
-	t.Run("should response 400 when authorization is missing", func(t *testing.T) {
-		req := httptest.NewRequest(
-			http.MethodGet,
-			path,
-			nil,
-		)
-
-		w := httptest.NewRecorder()
-
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
-		assert.JSONEq(t, `{
-			"message": "authorization header tidak ditemukan"
-		}`, w.Body.String())
-	})
-
-	t.Run("get note by id success", func(t *testing.T) {
-		var exisistNote entitiesNote.Note
-		err = database.DB.First(&exisistNote).Error
-		assert.NoError(t, err)
-
-		req := httptest.NewRequest(
-			http.MethodGet,
-			path,
-			nil,
-		)
-
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+authToken)
-
-		w := httptest.NewRecorder()
-
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-		assert.NotEmpty(t, w.Body.String())
-
-		// database.DB.Exec("DELETE FROM notes")
-	})
-	// database.DB.Exec("DELETE FROM users")
-}
-
-func Test_EditNoteModul(t *testing.T) {
-	router := gin.New()
-	Router(router, database.DB)
-
-	bodyLogin := []byte(`{
-		"username": "Jaya123",
-		"password": "12345678"
-	}`)
-
-	reqLogin := httptest.NewRequest(
-		http.MethodPost,
-		"/login",
-		bytes.NewBuffer(bodyLogin),
-	)
-
-	wLogin := httptest.NewRecorder()
-
-	router.ServeHTTP(wLogin, reqLogin)
-
-	var response map[string]interface{}
-
-	err := json.Unmarshal(
-		wLogin.Body.Bytes(),
-		&response,
-	)
-
-	assert.NoError(t, err)
-
-	data := response["data"].(map[string]interface{})
-	authToken := data["token"].(string)
-
-	var note entitiesNote.Note
-	err = database.DB.First(&note).Error
-	assert.NoError(t, err)
-
-	path := fmt.Sprintf("/api/note/%s", note.ID)
-
-	t.Run("should response 400 when authorization is missing", func(t *testing.T) {
-		body := []byte(`{
-			"title": "new title",
-			"content": "new content"
-		}`)
-
-		req := httptest.NewRequest(
-			http.MethodPatch,
-			path,
-			bytes.NewBuffer(body),
-		)
-
-		w := httptest.NewRecorder()
-
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
-		assert.JSONEq(t, `{
-			"message": "authorization header tidak ditemukan"
-		}`, w.Body.String())
-	})
-
-	t.Run("should be error when note to edit not found", func(t *testing.T) {
-		body := []byte(`{
-			"title": null,
-			"content": null
-		}`)
-
-		req := httptest.NewRequest(
-			http.MethodPatch,
-			path,
-			bytes.NewBuffer(body),
-		)
-
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+authToken)
-
-		w := httptest.NewRecorder()
-
-		router.ServeHTTP(w, req)
-
-		responseExpected := fmt.Sprintln(`{
-			"message": "gagal memperbarui note",
-			"error": "Tidak ada data yang dikirim untuk diubah"
-		}`)
-
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-		assert.JSONEq(t, responseExpected, w.Body.String())
-	})
-
-	t.Run("should success update note when only updating title", func(t *testing.T) {
-		body := []byte(`{
-			"title": "new title"
+	t.Run("Create Note", func(t *testing.T) {
+		t.Run("response 401 when authorization is missing", func(t *testing.T) {
+			body := []byte(`{
+				"title": "Note1",
+				"content": "content note1"
 			}`)
 
-		req := httptest.NewRequest(
-			http.MethodPatch,
-			path,
-			bytes.NewBuffer(body),
-		)
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/api/note",
+				bytes.NewBuffer(body),
+			)
 
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+authToken)
+			req.Header.Set("Content-Type", "application/json")
 
-		w := httptest.NewRecorder()
+			w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+			router.ServeHTTP(w, req)
 
-		var note entitiesNote.Note
-		database.DB.First(&note)
+			assert.Equal(t, http.StatusUnauthorized, w.Code)
+			assert.JSONEq(t, `{
+				"message": "authorization header tidak ditemukan"
+			}`, w.Body.String())
+		})
 
-		responseExpected := fmt.Sprintf(`{
-			"message": "Note berhasil diperbarui",
-			"data": "%s"
-		}`, note.ID)
+		t.Run("Add note success", func(t *testing.T) {
+			body := []byte(`{
+				"title": "Note1",
+				"content": "content note1"
+			}`)
 
-		assert.Equal(t, http.StatusOK, w.Code)
-		assert.JSONEq(t, responseExpected, w.Body.String())
-		assert.Equal(t, "new title", note.Title)
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/api/note",
+				bytes.NewBuffer(body),
+			)
+
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "Bearer "+authToken)
+
+			w := httptest.NewRecorder()
+
+			router.ServeHTTP(w, req)
+
+			assert.Equal(t, http.StatusCreated, w.Code)
+
+			var note entitiesNote.Note
+
+			err := database.DB.Where("title = ?", "Note1").First(&note).Error
+
+			assert.NoError(t, err)
+			expectedResponse := fmt.Sprintf(`{
+				"message": "note berhasil ditambahkan",
+				"data": {
+					"ID": "%s",
+					"Title": "%s"
+				}
+			}`, note.ID, note.Title)
+
+			assert.JSONEq(t, expectedResponse, w.Body.String())
+		})
 	})
 
-	t.Run("should success update note when updating title and content", func(t *testing.T) {
-		body := []byte(`{
-			"title": "update new title",
-			"content": "new content"
-		}`)
-
-		req := httptest.NewRequest(
-			http.MethodPatch,
-			path,
-			bytes.NewBuffer(body),
-		)
-
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+authToken)
-
-		w := httptest.NewRecorder()
-
-		router.ServeHTTP(w, req)
-
-		var note entitiesNote.Note
-
-		database.DB.First(&note)
-
-		responseExpected := fmt.Sprintf(`{
-			"message": "Note berhasil diperbarui",
-			"data": "%s"
-		}`, note.ID)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-		assert.JSONEq(t, responseExpected, w.Body.String())
-		assert.Equal(t, "update new title", note.Title)
-		assert.Equal(t, "new content", note.Content)
-	})
-}
-
-func Test_DeleteNoteModul(t *testing.T) {
-	router := gin.New()
-
-	Router(router, database.DB)
-
-	bodyLogin := []byte(`{
-		"username": "Jaya123",
-		"password": "12345678"
-	}`)
-
-	reqLogin := httptest.NewRequest(
-		http.MethodPost,
-		"/login",
-		bytes.NewBuffer(bodyLogin),
-	)
-
-	wLogin := httptest.NewRecorder()
-
-	router.ServeHTTP(wLogin, reqLogin)
-
-	var response map[string]interface{}
-
-	err := json.Unmarshal(
-		wLogin.Body.Bytes(),
-		&response,
-	)
-
-	assert.NoError(t, err)
-
-	data := response["data"].(map[string]interface{})
-	authToken := data["token"].(string)
-
+	// mencari url path
 	var note entitiesNote.Note
 	err = database.DB.First(&note).Error
 	assert.NoError(t, err)
 
 	path := fmt.Sprintf("/api/note/%s", note.ID)
+	log.Printf("path adalah %s", path)
 
-	t.Run("should response 400 when id not found", func(t *testing.T) {
-		req := httptest.NewRequest(
-			http.MethodDelete,
-			"/api/note/:id",
-			nil,
-		)
+	t.Run("Get Note by ID", func(t *testing.T) {
+		t.Run("should response 400 when authorization is missing", func(t *testing.T) {
+			req := httptest.NewRequest(
+				http.MethodGet,
+				path,
+				nil,
+			)
 
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+authToken)
+			w := httptest.NewRecorder()
 
-		w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
 
-		router.ServeHTTP(w, req)
+			assert.Equal(t, http.StatusUnauthorized, w.Code)
+			assert.JSONEq(t, `{
+				"message": "authorization header tidak ditemukan"
+			}`, w.Body.String())
+		})
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-		assert.JSONEq(t, `{
-			"message": "gagal menghapus note",
-			"error": "id tidak ditemukan"
-		}`, w.Body.String())
+		t.Run("get note by id success", func(t *testing.T) {
+			var exisistNote entitiesNote.Note
+			err = database.DB.First(&exisistNote).Error
+			assert.NoError(t, err)
+
+			req := httptest.NewRequest(
+				http.MethodGet,
+				path,
+				nil,
+			)
+
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "Bearer "+authToken)
+
+			w := httptest.NewRecorder()
+
+			router.ServeHTTP(w, req)
+
+			assert.Equal(t, http.StatusOK, w.Code)
+			assert.NotEmpty(t, w.Body.String())
+
+			// database.DB.Exec("DELETE FROM notes")
+		})
 	})
 
-	t.Run("delete success", func(t *testing.T) {
-		var note entitiesNote.Note
-		database.DB.First(&note)
+	t.Run("Edit Note by Id", func(t *testing.T) {
+		t.Run("should response 400 when authorization is missing", func(t *testing.T) {
+			body := []byte(`{
+				"title": "new title",
+				"content": "new content"
+			}`)
 
-		req := httptest.NewRequest(
-			http.MethodDelete,
-			path,
-			nil,
-		)
+			req := httptest.NewRequest(
+				http.MethodPatch,
+				path,
+				bytes.NewBuffer(body),
+			)
 
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+authToken)
+			w := httptest.NewRecorder()
 
-		w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
 
-		router.ServeHTTP(w, req)
+			assert.Equal(t, http.StatusUnauthorized, w.Code)
+			assert.JSONEq(t, `{
+				"message": "authorization header tidak ditemukan"
+			}`, w.Body.String())
+		})
 
-		response := fmt.Sprintf(`{
-			"message": "berhasil menghapus note",
-			"data": "%s"
-		}`, note.ID)
+		t.Run("should be error when note to edit not found", func(t *testing.T) {
+			body := []byte(`{
+				"title": null,
+				"content": null
+			}`)
 
-		assert.Equal(t, http.StatusOK, w.Code)
-		assert.JSONEq(t, response, w.Body.String())
+			req := httptest.NewRequest(
+				http.MethodPatch,
+				path,
+				bytes.NewBuffer(body),
+			)
 
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "Bearer "+authToken)
+
+			w := httptest.NewRecorder()
+
+			router.ServeHTTP(w, req)
+
+			responseExpected := fmt.Sprintln(`{
+				"message": "gagal memperbarui note",
+				"error": "Tidak ada data yang dikirim untuk diubah"
+			}`)
+
+			assert.Equal(t, http.StatusBadRequest, w.Code)
+			assert.JSONEq(t, responseExpected, w.Body.String())
+		})
+
+		t.Run("should success update note when only updating title", func(t *testing.T) {
+			body := []byte(`{
+				"title": "new title"
+				}`)
+
+			req := httptest.NewRequest(
+				http.MethodPatch,
+				path,
+				bytes.NewBuffer(body),
+			)
+
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "Bearer "+authToken)
+
+			w := httptest.NewRecorder()
+
+			router.ServeHTTP(w, req)
+
+			var note entitiesNote.Note
+			database.DB.First(&note)
+
+			responseExpected := fmt.Sprintf(`{
+				"message": "Note berhasil diperbarui",
+				"data": "%s"
+			}`, note.ID)
+
+			assert.Equal(t, http.StatusOK, w.Code)
+			assert.JSONEq(t, responseExpected, w.Body.String())
+			assert.Equal(t, "new title", note.Title)
+		})
+
+		t.Run("should success update note when updating title and content", func(t *testing.T) {
+			body := []byte(`{
+				"title": "update new title",
+				"content": "new content"
+			}`)
+
+			req := httptest.NewRequest(
+				http.MethodPatch,
+				path,
+				bytes.NewBuffer(body),
+			)
+
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "Bearer "+authToken)
+
+			w := httptest.NewRecorder()
+
+			router.ServeHTTP(w, req)
+
+			var note entitiesNote.Note
+
+			database.DB.First(&note)
+
+			responseExpected := fmt.Sprintf(`{
+				"message": "Note berhasil diperbarui",
+				"data": "%s"
+			}`, note.ID)
+
+			assert.Equal(t, http.StatusOK, w.Code)
+			assert.JSONEq(t, responseExpected, w.Body.String())
+			assert.Equal(t, "update new title", note.Title)
+			assert.Equal(t, "new content", note.Content)
+		})
 	})
-	database.DB.Exec("DELETE FROM users")
+
+	t.Run("Delete Note by Id", func(t *testing.T) {
+		t.Run("should response 400 when id not found", func(t *testing.T) {
+			req := httptest.NewRequest(
+				http.MethodDelete,
+				"/api/note/:id",
+				nil,
+			)
+
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "Bearer "+authToken)
+
+			w := httptest.NewRecorder()
+
+			router.ServeHTTP(w, req)
+
+			assert.Equal(t, http.StatusBadRequest, w.Code)
+			assert.JSONEq(t, `{
+				"message": "gagal menghapus note",
+				"error": "id tidak ditemukan"
+			}`, w.Body.String())
+		})
+
+		t.Run("delete success", func(t *testing.T) {
+			var note entitiesNote.Note
+			database.DB.First(&note)
+
+			req := httptest.NewRequest(
+				http.MethodDelete,
+				path,
+				nil,
+			)
+
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "Bearer "+authToken)
+
+			w := httptest.NewRecorder()
+
+			router.ServeHTTP(w, req)
+
+			response := fmt.Sprintf(`{
+				"message": "berhasil menghapus note",
+				"data": "%s"
+			}`, note.ID)
+
+			assert.Equal(t, http.StatusOK, w.Code)
+			assert.JSONEq(t, response, w.Body.String())
+
+		})
+		database.DB.Exec("DELETE FROM users")
+	})
 }
