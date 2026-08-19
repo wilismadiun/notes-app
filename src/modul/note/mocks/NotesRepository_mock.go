@@ -55,17 +55,17 @@ func (mr *MockNotesRepositoryMockRecorder) CreateNote(note any) *gomock.Call {
 }
 
 // DeleteNoteById mocks base method.
-func (m *MockNotesRepository) DeleteNoteById(id string) error {
+func (m *MockNotesRepository) DeleteNoteById(note entities.Note) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteNoteById", id)
+	ret := m.ctrl.Call(m, "DeleteNoteById", note)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteNoteById indicates an expected call of DeleteNoteById.
-func (mr *MockNotesRepositoryMockRecorder) DeleteNoteById(id any) *gomock.Call {
+func (mr *MockNotesRepositoryMockRecorder) DeleteNoteById(note any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNoteById", reflect.TypeOf((*MockNotesRepository)(nil).DeleteNoteById), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNoteById", reflect.TypeOf((*MockNotesRepository)(nil).DeleteNoteById), note)
 }
 
 // EditNoteById mocks base method.
@@ -83,16 +83,15 @@ func (mr *MockNotesRepositoryMockRecorder) EditNoteById(note, update any) *gomoc
 }
 
 // FindNoteById mocks base method.
-func (m *MockNotesRepository) FindNoteById(id string) (entities.Note, error) {
+func (m *MockNotesRepository) FindNoteById(note *entities.Note) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindNoteById", id)
-	ret0, _ := ret[0].(entities.Note)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "FindNoteById", note)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // FindNoteById indicates an expected call of FindNoteById.
-func (mr *MockNotesRepositoryMockRecorder) FindNoteById(id any) *gomock.Call {
+func (mr *MockNotesRepositoryMockRecorder) FindNoteById(note any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindNoteById", reflect.TypeOf((*MockNotesRepository)(nil).FindNoteById), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindNoteById", reflect.TypeOf((*MockNotesRepository)(nil).FindNoteById), note)
 }

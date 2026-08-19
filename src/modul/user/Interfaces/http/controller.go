@@ -1,7 +1,6 @@
 package http
 
 import (
-	"fmt"
 	"net/http"
 	usecase "notes-app/src/modul/user/Applications/Usecase"
 	"notes-app/src/modul/user/Domains/entities"
@@ -60,13 +59,11 @@ func (h *UserHandler) Login(c *gin.Context) {
 		return
 	}
 
-	data := fmt.Sprintf(`{
-		"username": %s,
-		"token": %s
-	}`, loginUser.Username, token)
-
 	c.JSON(http.StatusOK, gin.H{
 		"message": "login berhasil",
-		"data":    data,
+		"data": gin.H{
+			"username": loginUser.Username,
+			"token":    token,
+		},
 	})
 }

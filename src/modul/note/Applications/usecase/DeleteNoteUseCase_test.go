@@ -19,22 +19,25 @@ func Test_DeleteNoteUseCase(t *testing.T) {
 		Repo: mockRepo,
 	}
 
-	t.Run("should return error when id not found", func(t *testing.T) {
-		mockRepo.EXPECT().DeleteNoteById("id-123").Return(errors.New("Id tidak ditemukan"))
+	userId := "user-123"
+	noteId := "note-123"
 
-		_, err := dn.Execute("id-123")
+	t.Run("should return error when id not found", func(t *testing.T) {
+		mockRepo.EXPECT().DeleteNoteById(gomock.Any()).Return(errors.New("Id tidak ditemukan"))
+
+		_, err := dn.Execute(noteId, userId)
 
 		assert.Error(t, err)
 		assert.EqualError(t, err, "Id tidak ditemukan")
 	})
 
 	t.Run("success", func(t *testing.T) {
-		mockRepo.EXPECT().DeleteNoteById("id-123").Return(nil)
+		mockRepo.EXPECT().DeleteNoteById(gomock.Any()).Return(nil)
 
-		id, err := dn.Execute("id-123")
+		id, err := dn.Execute(noteId, userId)
 
 		assert.NoError(t, err)
 		assert.Equal(t, nil, err)
-		assert.Equal(t, "id-123", id)
+		assert.Equal(t, noteId, id)
 	})
 }

@@ -9,8 +9,13 @@ type GetNoteById struct {
 	Repo domains.NotesRepository
 }
 
-func (h *GetNoteById) Execute(id string) (entities.Note, error) {
-	note, err := h.Repo.FindNoteById(id)
+func (h *GetNoteById) Execute(noteId, userId string) (entities.Note, error) {
+	note := entities.Note{
+		ID:    noteId,
+		Owner: userId,
+	}
+
+	err := h.Repo.FindNoteById(&note)
 	if err != nil {
 		return entities.Note{}, err
 	}

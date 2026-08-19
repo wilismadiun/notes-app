@@ -20,24 +20,20 @@ func (h *NoteRepository) CreateNote(note entities.Note) error {
 	return nil
 }
 
-func (h *NoteRepository) FindNoteById(id string) (entities.Note, error) {
-	exisistNote := entities.Note{
-		ID: id,
-	}
-
-	err := h.DB.First(&exisistNote).Error
+func (h *NoteRepository) FindNoteById(note *entities.Note) error {
+	err := h.DB.Where("id = ? AND owner = ?", note.ID, note.Owner).First(note).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return entities.Note{}, errors.New("id tidak ditemukan")
+			return errors.New("id tidak ditemukan")
 		}
-		return entities.Note{}, err
+		return err
 	}
 
-	return exisistNote, nil
+	return nil
 }
 
 func (h *NoteRepository) EditNoteById(note entities.Note, update map[string]any) error {
-	result := h.DB.Model(&note).Updates(update)
+	result := h.DB.Model(&note).Where("id = ? AND owner = ?", note.ID, note.Owner).Updates(update)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -49,12 +45,8 @@ func (h *NoteRepository) EditNoteById(note entities.Note, update map[string]any)
 	return nil
 }
 
-func (h *NoteRepository) DeleteNoteById(id string) error {
-	var note entities.Note
-
-	result := h.DB.
-		Where("id = ?", id).
-		Delete(&note)
+func (h *NoteRepository) DeleteNoteById(note entities.Note) error {
+	result := h.DB.Where("id = ? AND owner = ?", note.ID, note.Owner).Delete(&note)
 
 	if result.Error != nil {
 		return result.Error

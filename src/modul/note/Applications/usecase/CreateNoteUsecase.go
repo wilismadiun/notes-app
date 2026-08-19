@@ -32,5 +32,5 @@ func (h *CreateNote) Execute(note entities.Note) (entities.CreateNoteResponse, e
 	return entities.CreateNoteResponse{
 		ID:    note.ID,
 		Title: note.Title,
-	}, err
+	}, nil
 }

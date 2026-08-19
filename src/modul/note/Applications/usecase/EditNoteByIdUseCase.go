@@ -11,8 +11,13 @@ type EditNoteById struct {
 	Repo domains.NotesRepository
 }
 
-func (h *EditNoteById) Execute(id string, payload entities.EditNoteRequest) (string, error) {
-	note, err := h.Repo.FindNoteById(id)
+func (h *EditNoteById) Execute(noteId, userId string, payload entities.EditNoteRequest) (string, error) {
+	note := entities.Note{
+		ID:    noteId,
+		Owner: userId,
+	}
+
+	err := h.Repo.FindNoteById(&note)
 	if err != nil {
 		return "", err
 	}
@@ -36,5 +41,5 @@ func (h *EditNoteById) Execute(id string, payload entities.EditNoteRequest) (str
 		return "", err
 	}
 
-	return id, nil
+	return noteId, nil
 }

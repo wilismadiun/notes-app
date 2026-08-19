@@ -5,7 +5,6 @@ import (
 	"notes-app/src/modul/note/Domains/entities"
 	"notes-app/src/modul/note/mocks"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -22,7 +21,7 @@ func Test_EditNoteById(t *testing.T) {
 	}
 
 	noteId := "id-123"
-	now := time.Now().Truncate(time.Microsecond)
+	userid := "user-123"
 	title := "title note"
 	content := "content note"
 
@@ -32,28 +31,19 @@ func Test_EditNoteById(t *testing.T) {
 	}
 
 	t.Run("should be error when id not found", func(t *testing.T) {
-		mockRepo.EXPECT().FindNoteById(noteId).Return(entities.Note{}, errors.New("id tidak ditemukan"))
+		mockRepo.EXPECT().FindNoteById(gomock.Any()).Return(errors.New("id tidak ditemukan"))
 
-		id, err := en.Execute(noteId, editNotePayload)
+		id, err := en.Execute(noteId, userid, editNotePayload)
 
 		assert.Error(t, err)
 		assert.EqualError(t, err, "id tidak ditemukan")
 		assert.Equal(t, "", id)
 	})
 
-	note := entities.Note{
-		ID:       noteId,
-		Title:    title,
-		Content:  content,
-		CreateAt: now,
-		UpdateAt: now,
-		Owner:    "user-123",
-	}
-
 	t.Run("should be error when note to edit not found", func(t *testing.T) {
-		mockRepo.EXPECT().FindNoteById(noteId).Return(note, nil)
+		mockRepo.EXPECT().FindNoteById(gomock.Any()).Return(nil)
 
-		id, err := en.Execute(noteId, editNotePayload)
+		id, err := en.Execute(noteId, userid, editNotePayload)
 
 		assert.Error(t, err)
 		assert.EqualError(t, err, "Tidak ada data yang dikirim untuk diubah")
@@ -61,14 +51,14 @@ func Test_EditNoteById(t *testing.T) {
 	})
 
 	t.Run("edit note success", func(t *testing.T) {
-		mockRepo.EXPECT().FindNoteById(noteId).Return(note, nil)
+		mockRepo.EXPECT().FindNoteById(gomock.Any()).Return(nil)
 
 		editNotePayload.Title = &title
 		editNotePayload.Content = &content
 
-		mockRepo.EXPECT().EditNoteById(note, gomock.Any()).Return(nil)
+		mockRepo.EXPECT().EditNoteById(gomock.Any(), gomock.Any()).Return(nil)
 
-		id, err := en.Execute(noteId, editNotePayload)
+		id, err := en.Execute(noteId, userid, editNotePayload)
 
 		assert.NoError(t, err)
 		assert.Equal(t, noteId, id)

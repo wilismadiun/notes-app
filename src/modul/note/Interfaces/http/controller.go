@@ -16,6 +16,13 @@ type NoteHandler struct {
 }
 
 func (h *NoteHandler) AddNote(c *gin.Context) {
+	userId, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "authorization header tidak ditemukan",
+		})
+	}
+
 	var note entities.Note
 
 	err := c.ShouldBindBodyWithJSON(&note)
@@ -26,6 +33,8 @@ func (h *NoteHandler) AddNote(c *gin.Context) {
 		})
 		return
 	}
+
+	note.Owner = userId.(string)
 
 	noteSuccess, err := h.CreateHandler.Execute(note)
 	if err != nil {
@@ -44,9 +53,15 @@ func (h *NoteHandler) AddNote(c *gin.Context) {
 }
 
 func (h *NoteHandler) GetNoteById(c *gin.Context) {
-	id := c.Param("id")
+	userId, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "authorization header tidak ditemukan",
+		})
+	}
+	noteId := c.Param("id")
 
-	note, err := h.GetNoteByIdhandler.Execute(id)
+	note, err := h.GetNoteByIdhandler.Execute(noteId, userId.(string))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "gagal menampilkan note",
@@ -62,7 +77,15 @@ func (h *NoteHandler) GetNoteById(c *gin.Context) {
 }
 
 func (h *NoteHandler) EditNoteById(c *gin.Context) {
-	id := c.Param("id")
+	userId, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "user_id tidak ditemukan",
+		})
+	}
+
+	noteId := c.Param("id")
+
 	var updateNote entities.EditNoteRequest
 
 	err := c.ShouldBindBodyWithJSON(&updateNote)
@@ -74,7 +97,7 @@ func (h *NoteHandler) EditNoteById(c *gin.Context) {
 		return
 	}
 
-	exisistId, err := h.EditNoteByIdHandler.Execute(id, updateNote)
+	exisistId, err := h.EditNoteByIdHandler.Execute(noteId, userId.(string), updateNote)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "gagal memperbarui note",
@@ -90,9 +113,16 @@ func (h *NoteHandler) EditNoteById(c *gin.Context) {
 }
 
 func (h *NoteHandler) DeleteNote(c *gin.Context) {
-	id := c.Param("id")
+	userId, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "user_id tidak ditemukan",
+		})
+	}
 
-	existId, err := h.Deletehandler.Execute(id)
+	noteid := c.Param("id")
+
+	existId, err := h.Deletehandler.Execute(noteid, userId.(string))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "gagal menghapus note",
