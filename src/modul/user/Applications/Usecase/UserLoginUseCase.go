@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"errors"
+	"log"
 	"notes-app/src/modul/user/Applications/security"
 	domains "notes-app/src/modul/user/Domains"
 	"notes-app/src/modul/user/Domains/entities"
@@ -21,6 +22,10 @@ func (h *UserLogin) Execute(userLogin entities.UserLogin) (string, error) {
 	}
 
 	username := userLogin.Username
+
+	log.Println("=============================================username didalam usecase========================")
+	log.Println(username)
+	log.Println("=============================================didalam usecase========================")
 
 	user := entities.User{
 		Username: username,
