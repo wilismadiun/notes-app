@@ -70,7 +70,6 @@ func Test_CreateServer(t *testing.T) {
 
 			body := []byte(`{
 				"username": "jaya",
-				"email": "jaya@gmail.com",
 				"password": "12345678"
 			}`)
 
