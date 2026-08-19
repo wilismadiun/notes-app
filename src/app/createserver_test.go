@@ -11,6 +11,7 @@ import (
 	entitiesNote "notes-app/src/modul/note/Domains/entities"
 	"notes-app/src/modul/user/Domains/entities"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -33,7 +34,6 @@ func Test_CreateServer(t *testing.T) {
 
 	Router(router, database.DB)
 
-	var hashPassword string
 	t.Run("Create User", func(t *testing.T) {
 		t.Run("should response 400 when password less than 8 character", func(t *testing.T) {
 			body := []byte(`{
@@ -94,6 +94,7 @@ func Test_CreateServer(t *testing.T) {
 			database.DB.Exec("DELETE FROM users")
 		})
 
+		var hashPassword string
 		t.Run("Create user success", func(t *testing.T) {
 			body := []byte(`{
 			"username": "Jaya123",
@@ -142,10 +143,6 @@ func Test_CreateServer(t *testing.T) {
 			assert.JSONEq(t, userJson, w.Body.String())
 		})
 	})
-
-	log.Println("===============================ini adalah hash password lagi=============================")
-	log.Println(hashPassword)
-	log.Println("===============================ini adalah hash password lagi=============================")
 
 	var authToken string
 	t.Run("Login User", func(t *testing.T) {
@@ -234,29 +231,33 @@ func Test_CreateServer(t *testing.T) {
 
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, http.StatusOK, w.Code)
+			log.Println("=========================")
+			log.Println(reflect.TypeOf(w.Body.String()))
+			log.Println("=========================")
+			log.Println(reflect.TypeOf(w.Body.Bytes()))
 
-			var dataResponse map[string]any
+			assert.Equal(t, http.StatusOK, w.Code)
+			type LoginResponse struct {
+				Data struct {
+					Token    string `json:"token"`
+					Username string `json:"username"`
+				} `json:"data"`
+				Message string `json:"message"`
+			}
+
+			var dataResponse LoginResponse
 
 			err := json.Unmarshal(w.Body.Bytes(), &dataResponse)
 
 			assert.NoError(t, err)
-			assert.Equal(t, "login berhasil", dataResponse["message"])
-			assert.NotEmpty(t, dataResponse["data"])
+			assert.Equal(t, "login berhasil", dataResponse.Message)
+			assert.NotEmpty(t, dataResponse.Data)
 
 			// Mendapatkan token authentication
-			data := dataResponse["data"].(map[string]any)
-			authToken = data["token"].(string)
+			authToken = dataResponse.Data.Token
 		})
 	})
 
-	var userCoba entities.User
-	database.DB.First(&userCoba)
-
-	log.Println("============================authToken=======================")
-	log.Printf("Tokennya adalah %s", authToken)
-	log.Printf("User adalah \n %s", userCoba)
-	log.Println("============================authToken=======================")
 	var path string
 	t.Run("Create Note", func(t *testing.T) {
 		t.Run("response 401 when authorization is missing", func(t *testing.T) {
