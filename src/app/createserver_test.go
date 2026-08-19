@@ -138,6 +138,7 @@ func Test_CreateServer(t *testing.T) {
 		})
 	})
 
+	var authToken string
 	t.Run("Login User", func(t *testing.T) {
 		t.Run("should be an error when the username doesn't exist", func(t *testing.T) {
 			body := []byte(`{
@@ -233,37 +234,13 @@ func Test_CreateServer(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, "login berhasil", dataResponse["message"])
 			assert.NotEmpty(t, dataResponse["data"])
+
+			// Mendapatkan token authentication
+			data := dataResponse["data"].(map[string]any)
+			authToken = data["token"].(string)
+			log.Printf("Tokennya adalah %s", authToken)
 		})
 	})
-
-	bodyLogin := []byte(`{
-		"username": "Jaya123",
-		"password": "12345678"
-	}`)
-
-	reqLogin := httptest.NewRequest(
-		http.MethodPost,
-		"/login",
-		bytes.NewBuffer(bodyLogin),
-	)
-
-	wLogin := httptest.NewRecorder()
-
-	router.ServeHTTP(wLogin, reqLogin)
-
-	var response map[string]interface{}
-
-	err := json.Unmarshal(
-		wLogin.Body.Bytes(),
-		&response,
-	)
-
-	assert.NoError(t, err)
-
-	// Mendapatkan token authentication
-	data := response["data"].(map[string]any)
-	authToken := data["token"].(string)
-	log.Printf("Tokennya adalah %s", authToken)
 
 	t.Run("Create Note", func(t *testing.T) {
 		t.Run("response 401 when authorization is missing", func(t *testing.T) {
@@ -330,7 +307,7 @@ func Test_CreateServer(t *testing.T) {
 
 	// mencari url path
 	var note entitiesNote.Note
-	err = database.DB.First(&note).Error
+	err := database.DB.First(&note).Error
 	assert.NoError(t, err)
 
 	path := fmt.Sprintf("/api/note/%s", note.ID)
