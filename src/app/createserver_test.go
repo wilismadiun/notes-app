@@ -145,6 +145,31 @@ func Test_LoginUserModule(t *testing.T) {
 
 	Router(router, database.DB)
 
+	// =========================
+	// REGISTER USER
+	// Pada github action setiap function test selesai, otomatis menghapus semua data
+	// =========================
+	bodyRegister := []byte(`{
+		"username": "Jaya123",
+		"password": "12345678"
+	}`)
+
+	reqRegister := httptest.NewRequest(
+		http.MethodPost,
+		"/register",
+		bytes.NewBuffer(bodyRegister),
+	)
+
+	reqRegister.Header.Set("Content-Type", "application/json")
+
+	wRegister := httptest.NewRecorder()
+
+	router.ServeHTTP(wRegister, reqRegister)
+
+	assert.Equal(t, http.StatusCreated, wRegister.Code)
+
+	t.Log("Register response:", wRegister.Body.String())
+
 	t.Run("should be an error when the username doesn't exist", func(t *testing.T) {
 		body := []byte(`{
 			"username": "",
@@ -218,15 +243,13 @@ func Test_LoginUserModule(t *testing.T) {
 		body := []byte(`{
 		"username": "Jaya123",
 		"password": "12345678"
-	}`)
+		}`)
 
 		req := httptest.NewRequest(
 			http.MethodPost,
 			"/login",
 			bytes.NewBuffer(body),
 		)
-
-		req.Header.Set("Content-Type", "application/json")
 
 		w := httptest.NewRecorder()
 
