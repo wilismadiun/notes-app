@@ -33,6 +33,7 @@ func Test_CreateServer(t *testing.T) {
 
 	Router(router, database.DB)
 
+	var hashPassword string
 	t.Run("Create User", func(t *testing.T) {
 		t.Run("should response 400 when password less than 8 character", func(t *testing.T) {
 			body := []byte(`{
@@ -124,6 +125,10 @@ func Test_CreateServer(t *testing.T) {
 
 			// Password di database harus sudah di-hash
 			assert.NotEqual(t, "12345678", user.Password)
+			hashPassword = user.Username
+			log.Println("===============================ini adalah hash password=============================")
+			log.Println(hashPassword)
+			log.Println("===============================ini adalah hash password=============================")
 
 			// Response harus sama dengan data di database
 			userJson := fmt.Sprintf(`{
@@ -240,6 +245,7 @@ func Test_CreateServer(t *testing.T) {
 			authToken = data["token"].(string)
 			log.Println("============================response=======================")
 			log.Println(w.Body.String())
+			log.Println("============================data response=======================")
 			log.Printf("response adalah %s", dataResponse)
 			log.Println("============================authToken=======================")
 			log.Printf("Tokennya adalah %s", authToken)
