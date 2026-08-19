@@ -239,12 +239,14 @@ func Test_CreateServer(t *testing.T) {
 			data := dataResponse["data"].(map[string]any)
 			authToken = data["token"].(string)
 			log.Println("============================response=======================")
+			log.Println(w.Body.String())
 			log.Printf("response adalah %s", dataResponse)
 			log.Println("============================authToken=======================")
 			log.Printf("Tokennya adalah %s", authToken)
 		})
 	})
 
+	var path string
 	t.Run("Create Note", func(t *testing.T) {
 		t.Run("response 401 when authorization is missing", func(t *testing.T) {
 			body := []byte(`{
@@ -305,16 +307,10 @@ func Test_CreateServer(t *testing.T) {
 			}`, note.ID, note.Title)
 
 			assert.JSONEq(t, expectedResponse, w.Body.String())
+
+			path = fmt.Sprintf("/api/note/%s", note.ID)
 		})
 	})
-
-	// mencari url path
-	var note entitiesNote.Note
-	err := database.DB.First(&note).Error
-	assert.NoError(t, err)
-
-	path := fmt.Sprintf("/api/note/%s", note.ID)
-	log.Printf("path adalah %s", path)
 
 	t.Run("Get Note by ID", func(t *testing.T) {
 		t.Run("should response 400 when authorization is missing", func(t *testing.T) {
@@ -336,7 +332,7 @@ func Test_CreateServer(t *testing.T) {
 
 		t.Run("get note by id success", func(t *testing.T) {
 			var exisistNote entitiesNote.Note
-			err = database.DB.First(&exisistNote).Error
+			err := database.DB.First(&exisistNote).Error
 			assert.NoError(t, err)
 
 			req := httptest.NewRequest(
