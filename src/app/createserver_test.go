@@ -11,7 +11,6 @@ import (
 	entitiesNote "notes-app/src/modul/note/Domains/entities"
 	"notes-app/src/modul/user/Domains/entities"
 	"os"
-	"reflect"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -94,7 +93,6 @@ func Test_CreateServer(t *testing.T) {
 			database.DB.Exec("DELETE FROM users")
 		})
 
-		var hashPassword string
 		t.Run("Create user success", func(t *testing.T) {
 			body := []byte(`{
 			"username": "Jaya123",
@@ -126,10 +124,6 @@ func Test_CreateServer(t *testing.T) {
 
 			// Password di database harus sudah di-hash
 			assert.NotEqual(t, "12345678", user.Password)
-			hashPassword = user.Password
-			log.Println("===============================ini adalah hash password=============================")
-			log.Println(hashPassword)
-			log.Println("===============================ini adalah hash password=============================")
 
 			// Response harus sama dengan data di database
 			userJson := fmt.Sprintf(`{
@@ -216,6 +210,12 @@ func Test_CreateServer(t *testing.T) {
 		})
 
 		t.Run("login success", func(t *testing.T) {
+			var user entities.User
+			database.DB.First(&user)
+			log.Println("==============================ini adalah isi user pada login============================")
+			log.Println(user)
+			log.Println("==============================ini adalah isi user pada login============================")
+
 			body := []byte(`{
 			"username": "Jaya123",
 			"password": "12345678"
@@ -231,10 +231,9 @@ func Test_CreateServer(t *testing.T) {
 
 			router.ServeHTTP(w, req)
 
-			log.Println("=========================")
-			log.Println(reflect.TypeOf(w.Body.String()))
-			log.Println("=========================")
-			log.Println(reflect.TypeOf(w.Body.Bytes()))
+			log.Println("=========================ini adalah isi body pada login======================================")
+			log.Println(string(body))
+			log.Println("=========================ini adalah isi body pada login======================================")
 
 			assert.Equal(t, http.StatusOK, w.Code)
 			type LoginResponse struct {
