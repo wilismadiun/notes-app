@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"notes-app/src/commons/database"
@@ -210,13 +209,6 @@ func Test_CreateServer(t *testing.T) {
 		})
 
 		t.Run("login success", func(t *testing.T) {
-			var user []entities.User
-			database.DB.Find(&user)
-
-			log.Println("==============================ini adalah isi user pada login============================")
-			log.Println(user)
-			log.Println("==============================ini adalah isi user pada login============================")
-
 			body := []byte(`{
 			"username": "Jaya123",
 			"password": "12345678"
@@ -231,10 +223,6 @@ func Test_CreateServer(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router.ServeHTTP(w, req)
-
-			log.Println("=========================ini adalah isi body pada login======================================")
-			log.Println(string(body))
-			log.Println("=========================ini adalah isi body pada login======================================")
 
 			assert.Equal(t, http.StatusOK, w.Code)
 			type LoginResponse struct {
@@ -299,10 +287,6 @@ func Test_CreateServer(t *testing.T) {
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "Bearer "+authToken)
 
-			fmt.Println("==========================auth token di add note==============================")
-			fmt.Println(authToken)
-			fmt.Println("==========================auth token di add note==============================")
-
 			w := httptest.NewRecorder()
 
 			router.ServeHTTP(w, req)
@@ -327,13 +311,6 @@ func Test_CreateServer(t *testing.T) {
 			path = fmt.Sprintf("/api/note/%s", note.ID)
 		})
 	})
-
-	var notecoba entitiesNote.Note
-	database.DB.First(&notecoba)
-	fmt.Println("=====================================ini adalah path==========================================")
-	fmt.Println(path)
-	fmt.Printf("ini adalah data note \n %s", notecoba)
-	fmt.Println("=====================================ini adalah path==========================================")
 
 	t.Run("Get Note by ID", func(t *testing.T) {
 		t.Run("should response 400 when authorization is missing", func(t *testing.T) {
