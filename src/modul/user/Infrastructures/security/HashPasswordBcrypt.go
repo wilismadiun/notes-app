@@ -14,3 +14,12 @@ func (h *HashPasswordBcrypt) HashingPassword(password string) (string, error) {
 
 	return hashedPassword, nil
 }
+
+func (h *HashPasswordBcrypt) CompareHashPassword(password, hashPassword string) error {
+	err := bcrypt.CompareHashAndPassword([]byte(hashPassword), []byte(password))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

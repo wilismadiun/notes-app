@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"net/http"
 	usecase "notes-app/src/modul/user/Applications/Usecase"
 	"notes-app/src/modul/user/Domains/entities"
@@ -9,7 +10,8 @@ import (
 )
 
 type UserHandler struct {
-	CreateHandler *usecase.CreateUserUseCase
+	CreateHandler    *usecase.CreateUserUseCase
+	LoginUserHandler *usecase.UserLogin
 }
 
 func (h *UserHandler) AddUser(c *gin.Context) {
@@ -34,5 +36,37 @@ func (h *UserHandler) AddUser(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Berhasil menambahkan user",
 		"data":    userSuccess,
+	})
+}
+
+func (h *UserHandler) Login(c *gin.Context) {
+	var loginUser entities.UserLogin
+
+	err := c.ShouldBindBodyWithJSON(&loginUser)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "login gagal",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	token, err := h.LoginUserHandler.Execute(loginUser)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "login gagal",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	data := fmt.Sprintf(`{
+		"username": %s,
+		"token": %s
+	}`, loginUser.Username, token)
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "login berhasil",
+		"data":    data,
 	})
 }

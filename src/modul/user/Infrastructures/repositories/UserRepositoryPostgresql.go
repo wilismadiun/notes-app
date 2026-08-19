@@ -42,3 +42,12 @@ func (h *UserRepository) VerifyUsername(user *entities.User) error {
 	// Error database
 	return err
 }
+
+func (h *UserRepository) FindUserByUsername(user *entities.User) error {
+	err := h.DB.Where("username = ?", user.Username).First(&user).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

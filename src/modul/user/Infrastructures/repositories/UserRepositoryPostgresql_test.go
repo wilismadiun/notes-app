@@ -50,7 +50,6 @@ func TestVerifyUsername_AlreadyExists(t *testing.T) {
 }
 
 func TestAddUser_Success(t *testing.T) {
-
 	user := entities.User{
 		Username: "joko",
 		Password: "12345678",
@@ -59,6 +58,28 @@ func TestAddUser_Success(t *testing.T) {
 	err := repo.Createuser(&user)
 
 	assert.NoError(t, err)
-
 	assert.NotEmpty(t, user.ID)
+
+	database.DB.Exec("DELETE FROM users")
+}
+
+func Test_FindUserByUsername(t *testing.T) {
+	user := entities.User{
+		ID:       "user-12345",
+		Username: "Jaya123",
+		Password: "12345678",
+	}
+
+	err := repo.Createuser(&user)
+	assert.NoError(t, err)
+
+	exisistUser := entities.User{
+		Username: "Jaya123",
+	}
+
+	err = repo.FindUserByUsername(&exisistUser)
+
+	assert.NoError(t, err)
+	assert.Equal(t, user.ID, exisistUser.ID)
+	assert.Equal(t, user.Password, exisistUser.Password)
 }

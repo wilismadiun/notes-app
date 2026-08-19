@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func TestUserModule(t *testing.T) {
+func Test_CreateUserModule(t *testing.T) {
 
 	router := gin.New()
 
@@ -60,7 +60,7 @@ func TestUserModule(t *testing.T) {
 		}`, w.Body.String())
 	})
 
-	t.Run("should response 400 when username avalilable", func(t *testing.T) {
+	t.Run("should response 400 when username available", func(t *testing.T) {
 		user := entities.User{
 			ID:       uuid.New().String(),
 			Username: "jaya",
@@ -97,7 +97,7 @@ func TestUserModule(t *testing.T) {
 
 	t.Run("Create user success", func(t *testing.T) {
 		body := []byte(`{
-		"username": "jaya",
+		"username": "Jaya123",
 		"password": "12345678",
 		"email": "jaya@gmail.com"
 	}`)
@@ -116,7 +116,7 @@ func TestUserModule(t *testing.T) {
 		// Ambil data dari database
 		var user entities.User
 		err := database.DB.
-			Where("username = ?", "jaya").
+			Where("username = ?", "Jaya123").
 			First(&user).Error
 
 		assert.NoError(t, err)
@@ -137,9 +137,116 @@ func TestUserModule(t *testing.T) {
 		}`, user.ID, user.Username)
 
 		assert.JSONEq(t, userJson, w.Body.String())
-
-		database.DB.Exec("DELETE FROM users")
 	})
+}
+
+func Test_LoginUserModule(t *testing.T) {
+	router := gin.New()
+
+	Router(router, database.DB)
+
+	t.Run("should be an error when the username doesn't exist", func(t *testing.T) {
+		body := []byte(`{
+			"username": "",
+			"password": "123456789"
+		}`)
+
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/login",
+			bytes.NewBuffer(body),
+		)
+
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, `{
+			"message": "login gagal",
+			"error": "username atau Password tidak ada"
+		}`, w.Body.String())
+	})
+
+	t.Run("There should be an error if the username isn't registered yet", func(t *testing.T) {
+		body := []byte(`{
+			"username": "Jaya12",
+			"password": "12345678"
+		}`)
+
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/login",
+			bytes.NewBuffer(body),
+		)
+
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, `{
+			"message": "login gagal",
+			"error": "username atau password salah"
+		}`, w.Body.String())
+	})
+
+	t.Run("There should be an error when the password does not match the password hash.", func(t *testing.T) {
+		body := []byte(`{
+			"username": "Jaya123",
+			"password": "123456789"
+		}`)
+
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/login",
+			bytes.NewBuffer(body),
+		)
+
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, `{
+			"message": "login gagal",
+			"error": "username atau password salah"
+		}`, w.Body.String())
+	})
+
+	t.Run("login success", func(t *testing.T) {
+		body := []byte(`{
+		"username": "Jaya123",
+		"password": "12345678"
+	}`)
+
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/login",
+			bytes.NewBuffer(body),
+		)
+
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var response struct {
+			Message string `json:"message"`
+			Data    string `json:"data"`
+		}
+
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+
+		assert.NoError(t, err)
+		assert.Equal(t, "login berhasil", response.Message)
+		assert.NotEmpty(t, response.Data)
+	})
+
+	database.DB.Exec("DELETE FROM users")
 }
 
 func TestNoteModul(t *testing.T) {

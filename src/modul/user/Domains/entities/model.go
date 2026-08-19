@@ -3,7 +3,6 @@ package entities
 import "errors"
 
 var (
-	ErrEmailRequired    = errors.New("EMAIL_REQUIRED")
 	ErrUsernameRequired = errors.New("USERNAME_REQUIRED")
 	ErrPasswordRequired = errors.New("PASSWORD_REQUIRED")
 	ErrUsernameInvalid  = errors.New("USERNAME_INVALID")
@@ -19,4 +18,9 @@ type User struct {
 type RegisteredUser struct {
 	ID       string
 	Username string
+}
+
+type UserLogin struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }

@@ -9,12 +9,12 @@ import (
 func TestUserLogin(t *testing.T) {
 	tests := []struct {
 		name    string
-		user    User
+		user    UserLogin
 		wantErr error
 	}{
 		{
 			name: "username required",
-			user: User{
+			user: UserLogin{
 				Username: "",
 				Password: "12345678",
 			},
@@ -22,7 +22,7 @@ func TestUserLogin(t *testing.T) {
 		},
 		{
 			name: "password required",
-			user: User{
+			user: UserLogin{
 				Username: "john123",
 				Password: "",
 			},
@@ -30,7 +30,7 @@ func TestUserLogin(t *testing.T) {
 		},
 		{
 			name: "success",
-			user: User{
+			user: UserLogin{
 				Username: "john123",
 				Password: "1234567",
 			},

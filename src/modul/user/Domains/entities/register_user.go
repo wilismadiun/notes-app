@@ -19,7 +19,6 @@ func VerifyRegisterUser(user User) error {
 		return ErrUsernameInvalid
 	}
 
-	// Password minimal 8 karakter
 	if len(user.Password) < 8 {
 		return ErrPasswordTooShort
 	}
