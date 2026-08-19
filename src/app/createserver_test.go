@@ -220,12 +220,10 @@ func Test_LoginUserModule(t *testing.T) {
 		"password": "12345678"
 		}`)
 
-		var user entities.User
-		database.DB.First(&user)
+		var user []entities.User
+		database.DB.Find(&user)
 		log.Println("================================================================")
-		log.Println(user.ID)
-		log.Println(user.Username)
-		log.Println(user.Password)
+		log.Println(user)
 		log.Println("================================================================")
 
 		req := httptest.NewRequest(
