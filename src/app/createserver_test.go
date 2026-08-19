@@ -238,6 +238,9 @@ func Test_CreateServer(t *testing.T) {
 			// Mendapatkan token authentication
 			data := dataResponse["data"].(map[string]any)
 			authToken = data["token"].(string)
+			log.Println("============================response=======================")
+			log.Printf("response adalah %s", dataResponse)
+			log.Println("============================authToken=======================")
 			log.Printf("Tokennya adalah %s", authToken)
 		})
 	})
