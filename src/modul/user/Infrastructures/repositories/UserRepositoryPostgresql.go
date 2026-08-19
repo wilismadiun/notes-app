@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"errors"
+	"fmt"
 	"notes-app/src/modul/user/Domains/entities"
 
 	"github.com/google/uuid"
@@ -13,7 +14,7 @@ type UserRepository struct {
 }
 
 func (h *UserRepository) Createuser(user *entities.User) error {
-	user.ID = uuid.New().String()
+	user.ID = fmt.Sprint("user-", uuid.New().String())
 	err := h.DB.Create(&user).Error
 	if err != nil {
 		return err
