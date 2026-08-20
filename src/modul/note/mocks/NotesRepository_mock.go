@@ -95,3 +95,17 @@ func (mr *MockNotesRepositoryMockRecorder) FindNoteById(note any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindNoteById", reflect.TypeOf((*MockNotesRepository)(nil).FindNoteById), note)
 }
+
+// GetAllNote mocks base method.
+func (m *MockNotesRepository) GetAllNote(userId string) []entities.Note {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllNote", userId)
+	ret0, _ := ret[0].([]entities.Note)
+	return ret0
+}
+
+// GetAllNote indicates an expected call of GetAllNote.
+func (mr *MockNotesRepositoryMockRecorder) GetAllNote(userId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllNote", reflect.TypeOf((*MockNotesRepository)(nil).GetAllNote), userId)
+}

@@ -20,6 +20,14 @@ func (h *NoteRepository) CreateNote(note entities.Note) error {
 	return nil
 }
 
+func (h *NoteRepository) GetAllNote(userId string) []entities.Note {
+	var notes []entities.Note
+
+	h.DB.Where("owner = ?", userId).Find(&notes)
+
+	return notes
+}
+
 func (h *NoteRepository) FindNoteById(note *entities.Note) error {
 	err := h.DB.Where("id = ? AND owner = ?", note.ID, note.Owner).First(note).Error
 	if err != nil {

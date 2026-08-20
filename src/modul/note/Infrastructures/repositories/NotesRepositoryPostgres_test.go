@@ -67,6 +67,58 @@ func Test_CreateNote(t *testing.T) {
 	repo.DB.Exec("DELETE FROM users")
 }
 
+func Test_GetAllNote(t *testing.T) {
+	// persiapan data
+	user := entitiesUser.User{
+		ID:       "user-123",
+		Username: "Jaya123",
+		Password: "pass123",
+	}
+
+	database.DB.Create(&user)
+
+	var exisistUser entitiesUser.User
+	err := database.DB.First(&exisistUser).Error
+	assert.NoError(t, err)
+	assert.NotEmpty(t, exisistUser)
+
+	notes := []entities.Note{
+		{
+			ID:       "id-1",
+			Title:    "title 1",
+			Content:  "content 1",
+			CreateAt: now,
+			UpdateAt: now,
+			Owner:    "user-123",
+		},
+		{
+			ID:       "id-2",
+			Title:    "title 2",
+			Content:  "content 2",
+			CreateAt: now,
+			UpdateAt: now,
+			Owner:    "user-123",
+		},
+	}
+
+	database.DB.Create(&notes)
+
+	t.Run("when owner not found", func(t *testing.T) {
+		exisistNote := repo.GetAllNote("user-13")
+
+		assert.Empty(t, exisistNote)
+		assert.Equal(t, 0, len(exisistNote))
+	})
+
+	t.Run("success", func(t *testing.T) {
+		exisistNote := repo.GetAllNote("user-123")
+
+		assert.NotEmpty(t, exisistNote)
+		assert.Equal(t, 2, len(exisistNote))
+	})
+
+}
+
 func Test_FindNoteById(t *testing.T) {
 	user := entitiesUser.User{
 		ID:       userId,
