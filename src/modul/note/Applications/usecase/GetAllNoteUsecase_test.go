@@ -16,8 +16,8 @@ func Test_GetAllNote(t *testing.T) {
 
 	mockRepo := mocks.NewMockNotesRepository(ctrl)
 
-	gn := GetAllNote{
-		repo: mockRepo,
+	gn := GetAllNotes{
+		Repo: mockRepo,
 	}
 
 	t.Run("empty note", func(t *testing.T) {

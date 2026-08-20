@@ -12,8 +12,9 @@ import (
 	"gorm.io/gorm"
 )
 
+var tokenService = security.AuthenticationTokenJWT{}
+
 func Router(router *gin.Engine, db *gorm.DB) {
-	tokenService := security.AuthenticationTokenJWT{}
 
 	// handlers
 	authMiddleware := middleware.Authentication(&tokenService)

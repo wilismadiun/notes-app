@@ -4,13 +4,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"notes-app/src/commons/database"
 	entitiesNote "notes-app/src/modul/note/Domains/entities"
 	"notes-app/src/modul/user/Domains/entities"
+	"notes-app/src/modul/user/Infrastructures/security"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -32,11 +35,63 @@ func Test_CreateServer(t *testing.T) {
 
 	Router(router, database.DB)
 
+	// persiapan data
+	now := time.Now()
+	userId := "idUser-123"
+	username := "John123"
+	password := "8764321"
+	noteId := "idNote-123"
+
+	hasher := security.HashPasswordBcrypt{}
+	hashPassword, err := hasher.HashingPassword(password)
+	assert.NoError(t, err)
+
+	user := entities.User{
+		ID:       userId,
+		Username: username,
+		Password: hashPassword,
+	}
+
+	err = database.DB.Create(&user).Error
+	assert.NoError(t, err)
+
+	note := entitiesNote.Note{
+		ID:       noteId,
+		Title:    "title note preparatin",
+		Content:  "content note preparatin",
+		CreateAt: now,
+		UpdateAt: now,
+		Owner:    userId,
+	}
+
+	err = database.DB.Create(&note).Error
+	assert.NoError(t, err)
+
+	// membuat authentication
+	userPreparation := entities.User{
+		ID: userId,
+	}
+
+	err = database.DB.First(&userPreparation).Error
+	assert.NoError(t, err)
+
+	authToken, err := tokenService.GenerateToken(userPreparation.ID)
+	assert.NoError(t, err)
+
+	// membuat path dengan note id
+	notePreparation := entitiesNote.Note{
+		ID: noteId,
+	}
+
+	err = database.DB.First(&notePreparation).Error
+	assert.NoError(t, err)
+
+	path := fmt.Sprintf("/api/note/%s", noteId)
+
 	t.Run("Create User", func(t *testing.T) {
 		t.Run("should response 400 when password less than 8 character", func(t *testing.T) {
 			body := []byte(`{
 				"username":"jaya",
-				"email":"jaya@gmail.com",
 				"password":"123456"
 			}`)
 
@@ -89,14 +144,12 @@ func Test_CreateServer(t *testing.T) {
 				"message":"username sudah digunakan"
 			}`, w.Body.String())
 
-			database.DB.Exec("DELETE FROM users")
 		})
 
 		t.Run("Create user success", func(t *testing.T) {
 			body := []byte(`{
 			"username": "Jaya123",
-			"password": "12345678",
-			"email": "jaya@gmail.com"
+			"password": "12345678"
 			}`)
 
 			req := httptest.NewRequest(
@@ -137,7 +190,7 @@ func Test_CreateServer(t *testing.T) {
 		})
 	})
 
-	var authToken string
+	// ERROR
 	t.Run("Login User", func(t *testing.T) {
 		t.Run("should be an error when the username doesn't exist", func(t *testing.T) {
 			body := []byte(`{
@@ -186,10 +239,12 @@ func Test_CreateServer(t *testing.T) {
 		})
 
 		t.Run("There should be an error when the password does not match the password hash.", func(t *testing.T) {
-			body := []byte(`{
-				"username": "Jaya123",
+			requestBody := fmt.Sprintf(`{
+				"username": "%s",
 				"password": "123456789"
-			}`)
+			}`, username)
+
+			body := []byte(requestBody)
 
 			req := httptest.NewRequest(
 				http.MethodPost,
@@ -209,10 +264,12 @@ func Test_CreateServer(t *testing.T) {
 		})
 
 		t.Run("login success", func(t *testing.T) {
-			body := []byte(`{
-			"username": "Jaya123",
-			"password": "12345678"
-			}`)
+			requestBody := fmt.Sprintf(`{
+			"username": "%s",
+			"password": "%s"
+			}`, username, password)
+
+			body := []byte(requestBody)
 
 			req := httptest.NewRequest(
 				http.MethodPost,
@@ -240,13 +297,10 @@ func Test_CreateServer(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, "login berhasil", dataResponse.Message)
 			assert.NotEmpty(t, dataResponse.Data)
-
-			// Mendapatkan token authentication
-			authToken = dataResponse.Data.Token
 		})
 	})
 
-	var path string
+	// ERROR
 	t.Run("Create Note", func(t *testing.T) {
 		t.Run("response 401 when authorization is missing", func(t *testing.T) {
 			body := []byte(`{
@@ -308,7 +362,6 @@ func Test_CreateServer(t *testing.T) {
 
 			assert.JSONEq(t, expectedResponse, w.Body.String())
 
-			path = fmt.Sprintf("/api/note/%s", note.ID)
 		})
 	})
 
@@ -351,7 +404,6 @@ func Test_CreateServer(t *testing.T) {
 			assert.Equal(t, http.StatusOK, w.Code)
 			assert.NotEmpty(t, w.Body.String())
 
-			// database.DB.Exec("DELETE FROM notes")
 		})
 	})
 
@@ -495,14 +547,15 @@ func Test_CreateServer(t *testing.T) {
 		})
 
 		t.Run("delete success", func(t *testing.T) {
-			var note entitiesNote.Note
-			database.DB.First(&note)
-
 			req := httptest.NewRequest(
 				http.MethodDelete,
 				path,
 				nil,
 			)
+
+			log.Println("=====================INI ADALAHH DELETE==================")
+			log.Println(path)
+			log.Println("=====================INI ADALAHH DELETE==================")
 
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "Bearer "+authToken)
@@ -514,12 +567,14 @@ func Test_CreateServer(t *testing.T) {
 			response := fmt.Sprintf(`{
 				"message": "berhasil menghapus note",
 				"data": "%s"
-			}`, note.ID)
+			}`, noteId)
 
 			assert.Equal(t, http.StatusOK, w.Code)
 			assert.JSONEq(t, response, w.Body.String())
 
 		})
-		database.DB.Exec("DELETE FROM users")
 	})
+
+	database.DB.Exec("DELETE FROM notes")
+	database.DB.Exec("DELETE FROM users")
 }

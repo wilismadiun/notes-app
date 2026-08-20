@@ -10,6 +10,7 @@ import (
 
 type NoteHandler struct {
 	CreateHandler       *usecase.CreateNote
+	GetAllNoteshandler  *usecase.GetAllNotes
 	GetNoteByIdhandler  *usecase.GetNoteById
 	EditNoteByIdHandler *usecase.EditNoteById
 	Deletehandler       *usecase.DeleteNote
@@ -50,6 +51,28 @@ func (h *NoteHandler) AddNote(c *gin.Context) {
 		"data":    noteSuccess,
 	})
 
+}
+
+func (h *NoteHandler) GetAllNotes(c *gin.Context) {
+	userId, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "authorization header tidak ditemukan",
+		})
+	}
+
+	notes, err := h.GetAllNoteshandler.Execute(userId.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "tidak ada data yang bisa ditampilkan",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "data berhasil ditampilan",
+		"data":    notes,
+	})
 }
 
 func (h *NoteHandler) GetNoteById(c *gin.Context) {

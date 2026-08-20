@@ -6,12 +6,12 @@ import (
 	"notes-app/src/modul/note/Domains/entities"
 )
 
-type GetAllNote struct {
-	repo domains.NotesRepository
+type GetAllNotes struct {
+	Repo domains.NotesRepository
 }
 
-func (h *GetAllNote) Execute(userId string) ([]entities.Note, error) {
-	notes := h.repo.GetAllNote(userId)
+func (h *GetAllNotes) Execute(userId string) ([]entities.Note, error) {
+	notes := h.Repo.GetAllNote(userId)
 
 	if len(notes) == 0 {
 		return []entities.Note{}, errors.New("Tidak ada data yg bisa ditampilkan")
