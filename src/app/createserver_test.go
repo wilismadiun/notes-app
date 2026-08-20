@@ -575,6 +575,6 @@ func Test_CreateServer(t *testing.T) {
 		})
 	})
 
-	database.DB.Exec("DELETE FROM notes")
-	database.DB.Exec("DELETE FROM users")
+	// database.DB.Exec("DELETE FROM notes")
+	// database.DB.Exec("DELETE FROM users")
 }
