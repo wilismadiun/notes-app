@@ -148,6 +148,114 @@ func Test_CreateUser(t *testing.T) {
 	database.DB.Exec("DELETE FROM users")
 }
 
+func Test_GetAllNote(t *testing.T) {
+	router := gin.New()
+	Router(router, database.DB)
+
+	t.Run("response 401 when authorization is missing", func(t *testing.T) {
+		body := []byte(`{
+				"title": "Note1",
+				"content": "content note1"
+			}`)
+
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/api/note",
+			bytes.NewBuffer(body),
+		)
+
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		assert.JSONEq(t, `{
+			"message": "authorization header tidak ditemukan"
+			}`, w.Body.String())
+	})
+
+	user, _, _, authToken, _ := databaseHelper()
+
+	t.Run("data note empty", func(t *testing.T) {
+		database.DB.Exec("DELETE FROM notes")
+
+		req := httptest.NewRequest(
+			http.MethodGet,
+			"/api/note",
+			nil,
+		)
+
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+authToken)
+
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, `{
+			"message": "tidak ada data yang bisa ditampilkan"
+		}`, w.Body.String())
+	})
+
+	notes := []entitiesNote.Note{
+		{
+			ID:       "id 1",
+			Title:    "title 1",
+			Content:  "content 1",
+			CreateAt: time.Now(),
+			UpdateAt: time.Now(),
+			Owner:    user.ID,
+		},
+		{
+			ID:       "id 2",
+			Title:    "title 2",
+			Content:  "content 2",
+			CreateAt: time.Now(),
+			UpdateAt: time.Now(),
+			Owner:    user.ID,
+		},
+		{
+			ID:       "id 3",
+			Title:    "title 3",
+			Content:  "content 3",
+			CreateAt: time.Now(),
+			UpdateAt: time.Now(),
+			Owner:    user.ID,
+		},
+	}
+
+	err := database.DB.Create(&notes).Error
+	assert.NoError(t, err)
+
+	t.Run("Get all note", func(t *testing.T) {
+		req := httptest.NewRequest(
+			http.MethodGet,
+			"/api/note",
+			nil,
+		)
+
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+authToken)
+
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		var response map[string]interface{}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, "data berhasil ditampilan", response["message"])
+	})
+
+	database.DB.Exec("DELETE FROM notes")
+	database.DB.Exec("DELETE FROM users")
+}
+
 func Test_UserLogin(t *testing.T) {
 	router := gin.New()
 

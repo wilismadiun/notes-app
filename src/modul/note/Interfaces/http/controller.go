@@ -63,7 +63,7 @@ func (h *NoteHandler) GetAllNotes(c *gin.Context) {
 
 	notes, err := h.GetAllNoteshandler.Execute(userId.(string))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"message": "tidak ada data yang bisa ditampilkan",
 		})
 		return
