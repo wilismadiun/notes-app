@@ -47,6 +47,8 @@ func TestVerifyUsername_AlreadyExists(t *testing.T) {
 	err = repo.VerifyUsername(&user)
 
 	assert.EqualError(t, err, "username sudah digunakan")
+
+	database.DB.Exec("DELETE FROM users")
 }
 
 func TestAddUser_Success(t *testing.T) {
@@ -82,4 +84,6 @@ func Test_FindUserByUsername(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, user.ID, exisistUser.ID)
 	assert.Equal(t, user.Password, exisistUser.Password)
+
+	database.DB.Exec("DELETE FROM users")
 }
