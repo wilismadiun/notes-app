@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"notes-app/src/commons/database"
@@ -77,7 +76,7 @@ func Test_CreateUser(t *testing.T) {
 			Password: "12345678",
 		}
 
-		database.DB.Table("users").Create(&user)
+		database.DB.Create(&user)
 
 		body := []byte(`{
 				"username": "jaya",
@@ -148,114 +147,6 @@ func Test_CreateUser(t *testing.T) {
 	database.DB.Exec("DELETE FROM users")
 }
 
-func Test_GetAllNote(t *testing.T) {
-	router := gin.New()
-	Router(router, database.DB)
-
-	t.Run("response 401 when authorization is missing", func(t *testing.T) {
-		body := []byte(`{
-				"title": "Note1",
-				"content": "content note1"
-			}`)
-
-		req := httptest.NewRequest(
-			http.MethodPost,
-			"/api/note",
-			bytes.NewBuffer(body),
-		)
-
-		req.Header.Set("Content-Type", "application/json")
-
-		w := httptest.NewRecorder()
-
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
-		assert.JSONEq(t, `{
-			"message": "authorization header tidak ditemukan"
-			}`, w.Body.String())
-	})
-
-	user, _, _, authToken, _ := databaseHelper()
-
-	t.Run("data note empty", func(t *testing.T) {
-		database.DB.Exec("DELETE FROM notes")
-
-		req := httptest.NewRequest(
-			http.MethodGet,
-			"/api/note",
-			nil,
-		)
-
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+authToken)
-
-		w := httptest.NewRecorder()
-
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-		assert.JSONEq(t, `{
-			"message": "tidak ada data yang bisa ditampilkan"
-		}`, w.Body.String())
-	})
-
-	notes := []entitiesNote.Note{
-		{
-			ID:       "id 1",
-			Title:    "title 1",
-			Content:  "content 1",
-			CreateAt: time.Now(),
-			UpdateAt: time.Now(),
-			Owner:    user.ID,
-		},
-		{
-			ID:       "id 2",
-			Title:    "title 2",
-			Content:  "content 2",
-			CreateAt: time.Now(),
-			UpdateAt: time.Now(),
-			Owner:    user.ID,
-		},
-		{
-			ID:       "id 3",
-			Title:    "title 3",
-			Content:  "content 3",
-			CreateAt: time.Now(),
-			UpdateAt: time.Now(),
-			Owner:    user.ID,
-		},
-	}
-
-	err := database.DB.Create(&notes).Error
-	assert.NoError(t, err)
-
-	t.Run("Get all note", func(t *testing.T) {
-		req := httptest.NewRequest(
-			http.MethodGet,
-			"/api/note",
-			nil,
-		)
-
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+authToken)
-
-		w := httptest.NewRecorder()
-
-		router.ServeHTTP(w, req)
-
-		var response map[string]interface{}
-		err := json.Unmarshal(w.Body.Bytes(), &response)
-		assert.NoError(t, err)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-		assert.Equal(t, "data berhasil ditampilan", response["message"])
-	})
-
-	database.DB.Exec("DELETE FROM notes")
-	database.DB.Exec("DELETE FROM users")
-}
-
 func Test_UserLogin(t *testing.T) {
 	router := gin.New()
 
@@ -307,9 +198,9 @@ func Test_UserLogin(t *testing.T) {
 			}`, w.Body.String())
 	})
 
-	user, password, _, _, _ := databaseHelper()
-
 	t.Run("There should be an error when the password does not match the password hash.", func(t *testing.T) {
+		user, _, _, _, _ := databaseHelper()
+
 		requestBody := fmt.Sprintf(`{
 				"username": "%s",
 				"password": "123456789"
@@ -332,9 +223,14 @@ func Test_UserLogin(t *testing.T) {
 				"message": "login gagal",
 				"error": "username atau password salah"
 			}`, w.Body.String())
+
+		database.DB.Exec("DELETE FROM notes")
+		database.DB.Exec("DELETE FROM users")
 	})
 
 	t.Run("login success", func(t *testing.T) {
+		user, password, _, _, _ := databaseHelper()
+
 		requestBody := fmt.Sprintf(`{
 			"username": "%s",
 			"password": "%s"
@@ -368,11 +264,13 @@ func Test_UserLogin(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "login berhasil", dataResponse.Message)
 		assert.NotEmpty(t, dataResponse.Data)
-	})
 
-	database.DB.Exec("DELETE FROM users")
+		database.DB.Exec("DELETE FROM notes")
+		database.DB.Exec("DELETE FROM users")
+	})
 }
 
+// SAMPAI SINI TERAKHI SAMPAI SINI TERAKHI SAMPAI SINI TERAKHI SAMPAI SINI TERAKHI SAMPAI SINI TERAKHI
 func Test_CreateNote(t *testing.T) {
 	router := gin.New()
 	Router(router, database.DB)
@@ -401,9 +299,9 @@ func Test_CreateNote(t *testing.T) {
 			}`, w.Body.String())
 	})
 
-	_, _, _, authToken, _ := databaseHelper()
-
 	t.Run("Add note success", func(t *testing.T) {
+		_, _, _, authToken, _ := databaseHelper()
+
 		body := []byte(`{
 				"title": "Note1",
 				"content": "content note1"
@@ -439,19 +337,126 @@ func Test_CreateNote(t *testing.T) {
 
 		assert.JSONEq(t, expectedResponse, w.Body.String())
 
+		database.DB.Exec("DELETE FROM notes")
+		database.DB.Exec("DELETE FROM users")
+	})
+}
+
+func Test_GetAllNote(t *testing.T) {
+	router := gin.New()
+	Router(router, database.DB)
+
+	t.Run("response 401 when authorization is missing", func(t *testing.T) {
+		body := []byte(`{
+				"title": "Note1",
+				"content": "content note1"
+			}`)
+
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/api/note",
+			bytes.NewBuffer(body),
+		)
+
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		assert.JSONEq(t, `{
+			"message": "authorization header tidak ditemukan"
+			}`, w.Body.String())
 	})
 
-	database.DB.Exec("DELETE FROM notes")
-	database.DB.Exec("DELETE FROM users")
+	t.Run("data note empty", func(t *testing.T) {
+		_, _, _, authToken, _ := databaseHelper()
+		database.DB.Exec("DELETE FROM notes")
+
+		req := httptest.NewRequest(
+			http.MethodGet,
+			"/api/note",
+			nil,
+		)
+
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+authToken)
+
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, `{
+			"message": "tidak ada data yang bisa ditampilkan"
+		}`, w.Body.String())
+	})
+
+	t.Run("Get all note", func(t *testing.T) {
+		user, _, _, authToken, _ := databaseHelper()
+
+		notes := []entitiesNote.Note{
+			{
+				ID:       "id 1",
+				Title:    "title 1",
+				Content:  "content 1",
+				CreateAt: time.Now(),
+				UpdateAt: time.Now(),
+				Owner:    user.ID,
+			},
+			{
+				ID:       "id 2",
+				Title:    "title 2",
+				Content:  "content 2",
+				CreateAt: time.Now(),
+				UpdateAt: time.Now(),
+				Owner:    user.ID,
+			},
+			{
+				ID:       "id 3",
+				Title:    "title 3",
+				Content:  "content 3",
+				CreateAt: time.Now(),
+				UpdateAt: time.Now(),
+				Owner:    user.ID,
+			},
+		}
+
+		err := database.DB.Create(&notes).Error
+		assert.NoError(t, err)
+
+		req := httptest.NewRequest(
+			http.MethodGet,
+			"/api/note",
+			nil,
+		)
+
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+authToken)
+
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		var response map[string]interface{}
+		err = json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, "data berhasil ditampilan", response["message"])
+
+		database.DB.Exec("DELETE FROM notes")
+		database.DB.Exec("DELETE FROM users")
+	})
 }
 
 func Test_GetNoteById(t *testing.T) {
 	router := gin.New()
 	Router(router, database.DB)
 
-	_, _, _, authToken, path := databaseHelper()
-
 	t.Run("should response 400 when authorization is missing", func(t *testing.T) {
+		_, _, _, _, path := databaseHelper()
 		req := httptest.NewRequest(
 			http.MethodGet,
 			path,
@@ -469,6 +474,8 @@ func Test_GetNoteById(t *testing.T) {
 	})
 
 	t.Run("get note by id success", func(t *testing.T) {
+		_, _, _, authToken, path := databaseHelper()
+
 		var exisistNote entitiesNote.Note
 		err := database.DB.First(&exisistNote).Error
 		assert.NoError(t, err)
@@ -488,19 +495,18 @@ func Test_GetNoteById(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.NotEmpty(t, w.Body.String())
-	})
 
-	database.DB.Exec("DELETE FROM notes")
-	database.DB.Exec("DELETE FROM users")
+		database.DB.Exec("DELETE FROM notes")
+		database.DB.Exec("DELETE FROM users")
+	})
 }
 
 func Test_EditNoteById(t *testing.T) {
 	router := gin.New()
 	Router(router, database.DB)
 
-	_, _, _, authToken, path := databaseHelper()
-
 	t.Run("should response 400 when authorization is missing", func(t *testing.T) {
+		_, _, _, _, path := databaseHelper()
 		body := []byte(`{
 				"title": "new title",
 				"content": "new content"
@@ -520,9 +526,14 @@ func Test_EditNoteById(t *testing.T) {
 		assert.JSONEq(t, `{
 				"message": "authorization header tidak ditemukan"
 			}`, w.Body.String())
+
+		database.DB.Exec("DELETE FROM notes")
+		database.DB.Exec("DELETE FROM users")
 	})
 
 	t.Run("should be error when note to edit not found", func(t *testing.T) {
+		_, _, _, authToken, path := databaseHelper()
+
 		body := []byte(`{
 				"title": null,
 				"content": null
@@ -548,9 +559,13 @@ func Test_EditNoteById(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 		assert.JSONEq(t, responseExpected, w.Body.String())
+
+		database.DB.Exec("DELETE FROM notes")
+		database.DB.Exec("DELETE FROM users")
 	})
 
 	t.Run("should success update note when only updating title", func(t *testing.T) {
+		_, _, _, authToken, path := databaseHelper()
 		body := []byte(`{
 				"title": "new title"
 				}`)
@@ -579,9 +594,13 @@ func Test_EditNoteById(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.JSONEq(t, responseExpected, w.Body.String())
 		assert.Equal(t, "new title", note.Title)
+
+		database.DB.Exec("DELETE FROM notes")
+		database.DB.Exec("DELETE FROM users")
 	})
 
 	t.Run("should success update note when updating title and content", func(t *testing.T) {
+		_, _, _, authToken, path := databaseHelper()
 		body := []byte(`{
 				"title": "update new title",
 				"content": "new content"
@@ -613,19 +632,18 @@ func Test_EditNoteById(t *testing.T) {
 		assert.JSONEq(t, responseExpected, w.Body.String())
 		assert.Equal(t, "update new title", note.Title)
 		assert.Equal(t, "new content", note.Content)
-	})
 
-	database.DB.Exec("DELETE FROM notes")
-	database.DB.Exec("DELETE FROM users")
+		database.DB.Exec("DELETE FROM notes")
+		database.DB.Exec("DELETE FROM users")
+	})
 }
 
 func Test_DeleteNoteById(t *testing.T) {
 	router := gin.New()
 	Router(router, database.DB)
 
-	_, _, note, authToken, path := databaseHelper()
-
 	t.Run("should response 400 when id not found", func(t *testing.T) {
+		_, _, _, authToken, _ := databaseHelper()
 		req := httptest.NewRequest(
 			http.MethodDelete,
 			"/api/note/:id",
@@ -644,18 +662,19 @@ func Test_DeleteNoteById(t *testing.T) {
 				"message": "gagal menghapus note",
 				"error": "id tidak ditemukan"
 			}`, w.Body.String())
+
+		database.DB.Exec("DELETE FROM users")
+		database.DB.Exec("DELETE FROM notes")
 	})
 
 	t.Run("delete success", func(t *testing.T) {
+		_, _, note, authToken, path := databaseHelper()
+
 		req := httptest.NewRequest(
 			http.MethodDelete,
 			path,
 			nil,
 		)
-
-		log.Println("=====================INI ADALAHH DELETE==================")
-		log.Println(path)
-		log.Println("=====================INI ADALAHH DELETE==================")
 
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", "Bearer "+authToken)
@@ -671,8 +690,7 @@ func Test_DeleteNoteById(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.JSONEq(t, response, w.Body.String())
-	})
 
-	database.DB.Exec("DELETE FROM notes")
-	database.DB.Exec("DELETE FROM users")
+		database.DB.Exec("DELETE FROM users")
+	})
 }
