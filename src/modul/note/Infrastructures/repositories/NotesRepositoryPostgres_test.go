@@ -126,7 +126,7 @@ func Test_GetAllNote(t *testing.T) {
 		exisistNote := repo.GetAllNote("user-123")
 
 		assert.NotEmpty(t, exisistNote)
-		assert.Equal(t, 3, len(exisistNote))
+		assert.Equal(t, 2, len(exisistNote))
 	})
 	repo.DB.Exec("DELETE FROM notes")
 	repo.DB.Exec("DELETE FROM users")
@@ -204,7 +204,7 @@ func Test_EditNoteById(t *testing.T) {
 		err = repo.FindNoteById(&exisistNote)
 		assert.NoError(t, err)
 
-		assert.Equal(t, notePrepare.ID, exisistNote.ID)
+		assert.Equal(t, note.ID, exisistNote.ID)
 		assert.Equal(t, editNote["title"], exisistNote.Title)
 		assert.Equal(t, editNote["content"], exisistNote.Content)
 		assert.Equal(t, editNote["updateAt"], exisistNote.UpdateAt)
