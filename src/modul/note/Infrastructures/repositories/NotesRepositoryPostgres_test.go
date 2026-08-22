@@ -31,15 +31,37 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func Test_CreateNote(t *testing.T) {
+func DatabaseHelper() (entitiesUser.User, entities.Note) {
+	userId := "user-123"
+	noteId := "note-123"
+	now := time.Now().Truncate(time.Microsecond)
+
 	user := entitiesUser.User{
 		ID:       userId,
-		Username: "Jaya 123",
+		Username: "Jaya123",
 		Password: "12345678",
 	}
 
-	err := repo.DB.Create(&user).Error
-	assert.NoError(t, err)
+	note := entities.Note{
+		ID:       noteId,
+		Title:    "title",
+		Content:  "content",
+		CreateAt: now,
+		UpdateAt: now,
+		Owner:    userId,
+	}
+
+	database.DB.Create(&user)
+	database.DB.Create(&note)
+
+	return user, note
+}
+
+func Test_CreateNote(t *testing.T) {
+	user, _ := DatabaseHelper()
+
+	noteId := "note ID"
+	now := time.Now()
 
 	note := entities.Note{
 		ID:       noteId,
@@ -47,10 +69,10 @@ func Test_CreateNote(t *testing.T) {
 		Content:  "test content database",
 		CreateAt: now,
 		UpdateAt: now,
-		Owner:    userId,
+		Owner:    user.ID,
 	}
 
-	err = repo.CreateNote(note)
+	err := repo.CreateNote(note)
 	assert.NoError(t, err)
 
 	exisistNote := entities.Note{
@@ -68,19 +90,9 @@ func Test_CreateNote(t *testing.T) {
 }
 
 func Test_GetAllNote(t *testing.T) {
-	// persiapan data
-	user := entitiesUser.User{
-		ID:       "user-123",
-		Username: "Jaya123",
-		Password: "pass123",
-	}
+	user, _ := DatabaseHelper()
 
-	database.DB.Create(&user)
-
-	var exisistUser entitiesUser.User
-	err := database.DB.First(&exisistUser).Error
-	assert.NoError(t, err)
-	assert.NotEmpty(t, exisistUser)
+	now := time.Now()
 
 	notes := []entities.Note{
 		{
@@ -89,7 +101,7 @@ func Test_GetAllNote(t *testing.T) {
 			Content:  "content 1",
 			CreateAt: now,
 			UpdateAt: now,
-			Owner:    "user-123",
+			Owner:    user.ID,
 		},
 		{
 			ID:       "id-2",
@@ -97,7 +109,7 @@ func Test_GetAllNote(t *testing.T) {
 			Content:  "content 2",
 			CreateAt: now,
 			UpdateAt: now,
-			Owner:    "user-123",
+			Owner:    user.ID,
 		},
 	}
 
@@ -114,25 +126,19 @@ func Test_GetAllNote(t *testing.T) {
 		exisistNote := repo.GetAllNote("user-123")
 
 		assert.NotEmpty(t, exisistNote)
-		assert.Equal(t, 2, len(exisistNote))
+		assert.Equal(t, 3, len(exisistNote))
 	})
-
+	repo.DB.Exec("DELETE FROM notes")
+	repo.DB.Exec("DELETE FROM users")
 }
 
 func Test_FindNoteById(t *testing.T) {
-	user := entitiesUser.User{
-		ID:       userId,
-		Username: "Jaya 123",
-		Password: "12345678",
-	}
+	user, note := DatabaseHelper()
 
-	err := repo.DB.Create(&user).Error
-	assert.NoError(t, err)
-
-	t.Run("should be error when id not foun", func(t *testing.T) {
+	t.Run("should be error when id not found", func(t *testing.T) {
 		note := entities.Note{
-			ID:    noteId,
-			Owner: userId,
+			ID:    "Note ID",
+			Owner: "User ID",
 		}
 
 		err := repo.FindNoteById(&note)
@@ -142,21 +148,9 @@ func Test_FindNoteById(t *testing.T) {
 	})
 
 	t.Run("success", func(t *testing.T) {
-		note := entities.Note{
-			ID:       noteId,
-			Title:    "test database",
-			Content:  "test content database",
-			CreateAt: now,
-			UpdateAt: now,
-			Owner:    userId,
-		}
-
-		err = repo.CreateNote(note)
-		assert.NoError(t, err)
-
 		exisistNote := entities.Note{
-			ID:    noteId,
-			Owner: userId,
+			ID:    note.ID,
+			Owner: user.ID,
 		}
 
 		err := repo.FindNoteById(&exisistNote)
@@ -165,100 +159,69 @@ func Test_FindNoteById(t *testing.T) {
 		assert.Equal(t, note.Title, exisistNote.Title)
 		assert.Equal(t, note.Content, exisistNote.Content)
 
-		repo.DB.Exec("DELETE FROM notes")
-		repo.DB.Exec("DELETE FROM users")
 	})
+	repo.DB.Exec("DELETE FROM notes")
+	repo.DB.Exec("DELETE FROM users")
 }
 
 func Test_EditNoteById(t *testing.T) {
+	user, notePrepare := DatabaseHelper()
+
 	now := time.Now().Truncate(time.Microsecond)
 
-	user := entitiesUser.User{
-		ID:       userId,
-		Username: "Jaya1234",
-		Password: "pass-123",
-	}
-
 	note := entities.Note{
-		ID:       noteId,
+		ID:       "Note ID",
 		Title:    "title",
 		Content:  "content",
 		CreateAt: now,
 		UpdateAt: now,
-		Owner:    userId,
+		Owner:    user.ID,
 	}
 
 	editNote := map[string]any{
 		"title":    "new title",
-		"content":  "noew content",
+		"content":  "new content",
 		"updateAt": time.Now().Truncate(time.Microsecond),
 	}
 
-	err := database.DB.Create(&user).Error
-	assert.NoError(t, err)
-
 	t.Run("should be error when id not found", func(t *testing.T) {
-		err = repo.EditNoteById(note, editNote)
+		err := repo.EditNoteById(note, editNote)
 
 		assert.Error(t, err)
 		assert.EqualError(t, err, "id tidak ditemukan")
 	})
 
 	t.Run("edit note success", func(t *testing.T) {
-		err = repo.CreateNote(note)
-		assert.NoError(t, err)
-
-		err = repo.EditNoteById(note, editNote)
+		err := repo.EditNoteById(notePrepare, editNote)
 
 		assert.NoError(t, err)
 
 		exisistNote := entities.Note{
-			ID:    noteId,
-			Owner: userId,
+			ID:    notePrepare.ID,
+			Owner: user.ID,
 		}
 
-		err := repo.FindNoteById(&exisistNote)
+		err = repo.FindNoteById(&exisistNote)
 		assert.NoError(t, err)
 
-		assert.Equal(t, note.ID, exisistNote.ID)
+		assert.Equal(t, notePrepare.ID, exisistNote.ID)
 		assert.Equal(t, editNote["title"], exisistNote.Title)
 		assert.Equal(t, editNote["content"], exisistNote.Content)
 		assert.Equal(t, editNote["updateAt"], exisistNote.UpdateAt)
 
-		database.DB.Exec("DELETE FROM notes")
 	})
 
+	database.DB.Exec("DELETE FROM notes")
 	database.DB.Exec("DELETE FROM users")
 }
 
 func Test_DeleteNote(t *testing.T) {
-	now := time.Now().Truncate(time.Microsecond)
-
-	user := entitiesUser.User{
-		ID:       userId,
-		Username: "Jaya1234",
-		Password: "pass-123",
-	}
-
-	note := entities.Note{
-		ID:       noteId,
-		Title:    "title",
-		Content:  "content",
-		CreateAt: now,
-		UpdateAt: now,
-		Owner:    userId,
-	}
-
-	err := database.DB.Create(&user).Error
-	assert.NoError(t, err)
-
-	err = database.DB.Create(&note).Error
-	assert.NoError(t, err)
+	user, note := DatabaseHelper()
 
 	t.Run("should be error when id not found", func(t *testing.T) {
 		exisistNote := entities.Note{
 			ID:    "note",
-			Owner: userId,
+			Owner: user.ID,
 		}
 
 		err := repo.DeleteNoteById(exisistNote)
@@ -269,11 +232,11 @@ func Test_DeleteNote(t *testing.T) {
 
 	t.Run("delete note success", func(t *testing.T) {
 		exisistNote := entities.Note{
-			ID:    noteId,
-			Owner: userId,
+			ID:    note.ID,
+			Owner: user.ID,
 		}
 
-		err = repo.DB.First(&exisistNote).Error
+		err := repo.DB.First(&exisistNote).Error
 		assert.NoError(t, err)
 		assert.Equal(t, note.Title, exisistNote.Title)
 		assert.Equal(t, note.Content, exisistNote.Content)

@@ -11,5 +11,10 @@ pipeline {
                 sh 'go mod download'
             }
         }
+        stage('test') {
+            steps {
+                sh 'go test ./...'
+            }
+        }
     }
 }
