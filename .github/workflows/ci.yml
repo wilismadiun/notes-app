@@ -55,7 +55,7 @@ jobs:
         run: goose -dir migrations up
 
       - name: Run tests
-        run: go test ./...
+        run: go test -v ./...
   
   build:
     needs: test
