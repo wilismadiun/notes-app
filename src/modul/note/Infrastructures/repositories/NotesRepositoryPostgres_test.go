@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
 
@@ -31,7 +32,9 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func DatabaseHelper() (entitiesUser.User, entities.Note) {
+func DatabaseHelper(t *testing.T) (entitiesUser.User, entities.Note) {
+	t.Helper()
+
 	userId := "user-123"
 	noteId := "note-123"
 	now := time.Now().Truncate(time.Microsecond)
@@ -42,6 +45,10 @@ func DatabaseHelper() (entitiesUser.User, entities.Note) {
 		Password: "12345678",
 	}
 
+	result := database.DB.Create(&user)
+	t.Logf("CREATE USER ERROR: %v", result.Error)
+	require.NoError(t, result.Error)
+
 	note := entities.Note{
 		ID:       noteId,
 		Title:    "title",
@@ -51,14 +58,15 @@ func DatabaseHelper() (entitiesUser.User, entities.Note) {
 		Owner:    userId,
 	}
 
-	database.DB.Create(&user)
-	database.DB.Create(&note)
+	result = database.DB.Create(&note)
+	t.Logf("CREATE USER ERROR: %v", result.Error)
+	require.NoError(t, result.Error)
 
 	return user, note
 }
 
 func Test_CreateNote(t *testing.T) {
-	user, _ := DatabaseHelper()
+	user, _ := DatabaseHelper(t)
 
 	noteId := "note ID"
 	now := time.Now()
@@ -98,7 +106,7 @@ func Test_GetAllNote(t *testing.T) {
 	})
 
 	t.Run("success", func(t *testing.T) {
-		user, _ := DatabaseHelper()
+		user, _ := DatabaseHelper(t)
 
 		now := time.Now()
 
@@ -135,7 +143,7 @@ func Test_GetAllNote(t *testing.T) {
 func Test_FindNoteById(t *testing.T) {
 
 	t.Run("should be error when id not found", func(t *testing.T) {
-		user, _ := DatabaseHelper()
+		user, _ := DatabaseHelper(t)
 
 		exisistNote := entities.Note{
 			ID:    "Note ID",
@@ -152,7 +160,7 @@ func Test_FindNoteById(t *testing.T) {
 	})
 
 	t.Run("success", func(t *testing.T) {
-		user, note := DatabaseHelper()
+		user, note := DatabaseHelper(t)
 
 		exisistNote := entities.Note{
 			ID:    note.ID,
@@ -172,7 +180,7 @@ func Test_FindNoteById(t *testing.T) {
 
 func Test_EditNoteById(t *testing.T) {
 	t.Run("should be error when note id not found", func(t *testing.T) {
-		user, _ := DatabaseHelper()
+		user, _ := DatabaseHelper(t)
 
 		now := time.Now().Truncate(time.Microsecond)
 
@@ -201,7 +209,7 @@ func Test_EditNoteById(t *testing.T) {
 	})
 
 	t.Run("edit note success", func(t *testing.T) {
-		user, note := DatabaseHelper()
+		user, note := DatabaseHelper(t)
 
 		editNote := map[string]any{
 			"title":    "new title",
@@ -234,7 +242,7 @@ func Test_EditNoteById(t *testing.T) {
 func Test_DeleteNote(t *testing.T) {
 
 	t.Run("should be error when id not found", func(t *testing.T) {
-		user, _ := DatabaseHelper()
+		user, _ := DatabaseHelper(t)
 
 		exisistNote := entities.Note{
 			ID:    "note",
@@ -251,7 +259,7 @@ func Test_DeleteNote(t *testing.T) {
 	})
 
 	t.Run("delete note success", func(t *testing.T) {
-		user, note := DatabaseHelper()
+		user, note := DatabaseHelper(t)
 
 		exisistNote := entities.Note{
 			ID:    note.ID,
