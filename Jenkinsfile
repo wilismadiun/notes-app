@@ -13,7 +13,7 @@ pipeline {
     stages {
         stage('Restore Depedencies') {
             steps {
-                sh 'docker compose -f docker-compose.test.yml run --rm app go mod download'
+                sh 'go mod download'
             }
         }
         stage('setup environment') {
