@@ -13,13 +13,13 @@ pipeline {
     stages {
         stage('Restore Depedencies') {
             steps {
-                sh 'go mod download'
+                sh 'docker compose -f docker-compose.test.yml run --rm app go mod download'
             }
         }
         stage('setup environment') {
             steps {
                 sh '''
-                    echo "DB_HOST=host.docker.internal" > .test.env
+                    echo "DB_HOST=localhost" > .test.env
                     echo "DB_PORT=5432" >> .test.env
                     echo "DB_USER=developers" >> .test.env
                     echo "DB_PASSWORD=supersecretpassword" >> .test.env
