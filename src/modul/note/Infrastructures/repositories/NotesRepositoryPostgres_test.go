@@ -59,7 +59,7 @@ func DatabaseHelper(t *testing.T) (entitiesUser.User, entities.Note) {
 	}
 
 	result = database.DB.Create(&note)
-	t.Logf("CREATE USER ERROR: %v", result.Error)
+	t.Logf("CREATE NOTE ERROR: %v", result.Error)
 	require.NoError(t, result.Error)
 
 	return user, note
